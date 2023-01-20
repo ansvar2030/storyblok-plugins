@@ -36,12 +36,19 @@
         components: {
             Multiselect,
         },
+
         data() {
             const list = []
             const selectOptions = []
 
-            if (this.$props.contentmodel.list) {
-                for (let tag of this.$props.contentmodel.list) {
+            const key = this.$props.contentmodel.list
+                ? 'list'
+                : this.$props.contentmodel.tags
+                ? 'tags'
+                : false
+
+            if (key) {
+                for (let tag of this.$props.contentmodel[key]) {
                     selectOptions.push(tag)
                     list.push(tag)
                 }
@@ -63,9 +70,13 @@
                 }
             },
 
-            // pluginCreated() {
-            //     console.log(pluginName, this)
-            // },
+            pluginCreated() {
+                // legacy
+                if (!this.model.list) {
+                    this.model.list = []
+                }
+                //     console.log(pluginName, this)
+            },
 
             isTagsChanged() {
                 const tagsModel = [...this.model.list]
@@ -121,7 +132,8 @@
                                     value.plugin === this.model.plugin &&
                                     (this.options.key
                                         ? key === this.options.key
-                                        : true)
+                                        : true) &&
+                                    Array.isArray(value.list)
                                 ) {
                                     for (let tag of value.list) {
                                         let text = (tag + '').trim()
