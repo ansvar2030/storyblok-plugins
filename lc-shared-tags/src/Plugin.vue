@@ -1,6 +1,7 @@
 <template>
     <div :class="[model.plugin]">
         <multiselect
+            v-if="options.disable_create"
             v-model="list"
             :options="selectOptions"
             :taggable="true"
@@ -9,7 +10,22 @@
             :close-on-select="false"
             :clear-on-select="false"
             :preserve-search="true"
-            placeholder="Select or type to create new"
+            :placeholder="'Select items'"
+            @open="loadOptions"
+            :max-height="200"
+        >
+        </multiselect>
+        <multiselect
+            v-else
+            v-model="list"
+            :options="selectOptions"
+            :taggable="true"
+            :multiple="true"
+            :preselect-first="true"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            :placeholder="'Select or type to create new'"
             @tag="addOption"
             @open="loadOptions"
             :max-height="200"
@@ -70,12 +86,47 @@
                 }
             },
 
+            findContentBlok(uid, list) {
+                for (let value of Object.values(list)) {
+                    if (!value || typeof value !== 'object') {
+                        continue
+                    }
+
+                    if (Array.isArray(value)) {
+                        const result = this.findContentBlok(uid, value)
+                        if (result) {
+                            return result
+                        }
+                    } else if (value._uid === uid) {
+                        return value
+                    } else {
+                        const result = this.findContentBlok(uid, value)
+                        if (result) {
+                            return result
+                        }
+                    }
+                }
+
+                return false
+            },
+
             pluginCreated() {
                 // legacy
                 if (!this.model.list) {
                     this.model.list = []
                 }
-                //     console.log(pluginName, this)
+
+                if (this.options.default) {
+                    const defaultTags = this.options.default
+                        .replace(/\s*,\s*/g, ',')
+                        .split(',')
+
+                    for (const tag of defaultTags) {
+                        this.list.push(tag)
+                    }
+                }
+
+                // console.log(pluginName, this)
             },
 
             isTagsChanged() {
@@ -107,10 +158,28 @@
 
                 this.loading = true
 
+                let contentType
+                if (this.options.content_type) {
+                    contentType = this.options.content_type
+                } else if (!contentType && this.options.content_type_field) {
+                    const contentBlok = this.findContentBlok(
+                        this.blockId,
+                        this.storyItem.content,
+                    )
+
+                    let type =
+                        contentBlok &&
+                        contentBlok[this.options.content_type_field]
+
+                    if (typeof type === 'string' && type.length) {
+                        contentType = type
+                    }
+                }
+
                 this.api
                     .get('cdn/stories', {
                         version: 'draft',
-                        content_type: this.options.content_type,
+                        content_type: contentType,
                         starts_with,
                     })
                     .then((result) => result.data.stories)
