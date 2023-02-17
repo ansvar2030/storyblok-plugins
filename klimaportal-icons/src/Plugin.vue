@@ -3,7 +3,7 @@
         <div class="icon-table">
             <div
                 class="group"
-                v-for="(icons, group) in iconGroups"
+                v-for="(icons, group) in filteredIconGroups"
                 :key="group"
             >
                 <div
@@ -55,16 +55,38 @@
 
     // Select an icon
 
+    // Parameters:
+    // - filter: comma separated list of group names
+    //   e.g. contact
+
     const pluginName = 'klimaportal-icons'
 
     export default {
         mixins: [window.Storyblok.plugin],
 
         data() {
+            console.log(iconGroups)
             return {
                 iconGroups,
                 selectedIcon: this.$props.contentmodel.name || null,
             }
+        },
+
+        computed: {
+            filteredIconGroups() {
+                if (!this.options.filter) {
+                    return this.iconGroups
+                }
+
+                const names = this.options.filter.replace(/\s/g, '').split(',')
+                const filtered = {}
+                for (const key in this.iconGroups) {
+                    if (names.includes(key)) {
+                        filtered[key] = this.iconGroups[key]
+                    }
+                }
+                return filtered
+            },
         },
 
         methods: {
@@ -105,8 +127,8 @@
             padding: 0.5rem;
             margin: 0;
             list-style: none;
-            background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
-            background-color: #dfe3e8;
+            // background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+            background-color: #fff;
             color: #1b243f;
             font-size: 14px;
             font-weight: 500;
@@ -130,20 +152,22 @@
                 padding: 0.25rem;
                 overflow: hidden;
                 color: #000;
-                border: 1px solid #ddd;
+                border: 1px solid #eee;
                 cursor: pointer;
                 box-shadow: 0 0 2px 2px rgba(#fff, 0);
+                border-radius: 3px;
                 background-color: transparent;
-                transition: border-color 0.25s, box-shadow 0.25s,
+                transition: color 0.25s, border-color 0.25s, box-shadow 0.25s,
                     background-color 0.25s;
 
                 &.active {
-                    border-color: #00b3b0;
-                    box-shadow: 0 0 2px 1px rgba(#00b3b0, 0.25);
+                    color: #fff;
+                    background-color: #00b3b0;
                 }
 
                 &:hover {
-                    background-color: #ddd;
+                    border-color: #00b3b0;
+                    box-shadow: 0 0 2px 1px rgba(#00b3b0, 0.25);
                 }
 
                 svg {
