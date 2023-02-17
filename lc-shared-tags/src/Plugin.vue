@@ -43,6 +43,9 @@
     // - content_type event
     // - starts_with {0}/{1}/
     // - key field_name
+    // - disable_create: don't allow creation of tags
+    // - content_type_field: path, set content type based on another field
+    // - default: default tags
 
     const pluginName = 'lc-shared-tags'
     import Multiselect from 'vue-multiselect'
@@ -83,6 +86,7 @@
                 return {
                     plugin: pluginName,
                     list: [],
+                    changed: false,
                 }
             },
 
@@ -116,7 +120,11 @@
                     this.model.list = []
                 }
 
-                if (this.options.default) {
+                if (
+                    this.list.length === 0 &&
+                    !this.model.changed &&
+                    this.options.default
+                ) {
                     const defaultTags = this.options.default
                         .replace(/\s*,\s*/g, ',')
                         .split(',')
@@ -126,7 +134,7 @@
                     }
                 }
 
-                // console.log(pluginName, this)
+                // console.log(pluginName, 'created', this)
             },
 
             isTagsChanged() {
@@ -246,6 +254,7 @@
                 handler: function (value) {
                     if (this.isTagsChanged()) {
                         this.model.list = [...value]
+                        this.model.changed = true
                         this.$emit('changed-model', this.model)
                     }
                 },
