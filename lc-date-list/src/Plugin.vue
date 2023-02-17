@@ -36,6 +36,31 @@
     // List of dates
     const pluginName = 'lc-date-list'
 
+    const tzOffset = new Date().getTimezoneOffset() / -60
+    const tzDiff = tzOffset >= 0 ? '+' : '-'
+    const timezone = tzDiff + ('' + Math.abs(tzOffset)).padStart(2, '0')
+
+    function toGMTDateString(date) {
+        const pad = (n) => `${n}`.padStart(2, '0')
+
+        return (
+            date.getFullYear() +
+            '-' +
+            pad(date.getMonth() + 1) +
+            '-' +
+            pad(date.getDate())
+        )
+    }
+
+    function convertToGMT(str) {
+        const date = new Date(str + ' UTC')
+        if (isNaN(date)) {
+            return null
+        }
+
+        return toGMTDateString(date)
+    }
+
     export default {
         mixins: [window.Storyblok.plugin],
 
@@ -45,7 +70,7 @@
 
             if (list && list.length) {
                 for (const value of list) {
-                    dates.push({ value })
+                    dates.push({ value: convertToGMT(value) })
                 }
             } else {
                 dates.push({ value: null })
@@ -87,7 +112,13 @@
                 handler: function () {
                     this.model.list = this.dates
                         .filter((i) => !!i.value)
-                        .map((i) => i.value)
+                        .map((i) => {
+                            let str = new Date(
+                                `${i.value}Z${timezone}`,
+                            ).toISOString()
+
+                            return str.replace('T', ' ').substring(0, 16)
+                        })
 
                     this.$emit('changed-model', this.model)
                 },
