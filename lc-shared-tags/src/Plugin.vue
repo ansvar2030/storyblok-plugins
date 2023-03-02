@@ -4,6 +4,8 @@
             v-if="options.disable_create"
             v-model="list"
             :options="selectOptions"
+            label="name"
+            track-by="value"
             :taggable="true"
             :multiple="true"
             :preselect-first="true"
@@ -14,11 +16,17 @@
             @open="loadOptions"
             :max-height="200"
         >
+            <template slot="option" slot-scope="{ option }">
+                <span class="indent" v-if="option.parent">—</span>
+                {{ option.name }}
+            </template>
         </multiselect>
         <multiselect
             v-else
             v-model="list"
             :options="selectOptions"
+            label="name"
+            track-by="value"
             :taggable="true"
             :multiple="true"
             :preselect-first="true"
@@ -30,6 +38,10 @@
             @open="loadOptions"
             :max-height="200"
         >
+            <template slot="option" slot-scope="{ option }">
+                <span class="indent" v-if="option.parent">—</span>
+                {{ option.name }}
+            </template>
         </multiselect>
     </div>
 </template>
@@ -46,6 +58,7 @@
     // - disable_create: don't allow creation of tags
     // - content_type_field: path, set content type based on another field
     // - default: default tags
+    // - options: list of tags, or url. format: (string | { name, value })[] or nested objects with key: items
 
     const pluginName = 'lc-shared-tags'
     import Multiselect from 'vue-multiselect'
@@ -59,19 +72,6 @@
         data() {
             const list = []
             const selectOptions = []
-
-            const key = this.$props.contentmodel.list
-                ? 'list'
-                : this.$props.contentmodel.tags
-                ? 'tags'
-                : false
-
-            if (key) {
-                for (let tag of this.$props.contentmodel[key]) {
-                    selectOptions.push(tag)
-                    list.push(tag)
-                }
-            }
 
             return {
                 selectOptions,
@@ -120,21 +120,118 @@
                     this.model.list = []
                 }
 
-                if (
-                    this.list.length === 0 &&
-                    !this.model.changed &&
-                    this.options.default
-                ) {
-                    const defaultTags = this.options.default
-                        .replace(/\s*,\s*/g, ',')
-                        .split(',')
+                new Promise((resolve) => {
+                    if (this.options.options) {
+                        if (/^https?:\/\//.test(this.options.options)) {
+                            // is url
+                            fetch(this.options.options)
+                                .then((response) => {
+                                    if (!response.ok) {
+                                        throw new Error(
+                                            'failed to load options',
+                                        )
+                                    }
 
-                    for (const tag of defaultTags) {
-                        this.list.push(tag)
+                                    return response.json()
+                                })
+                                .then((data) => {
+                                    if (!data || !data.length) {
+                                        return
+                                    }
+
+                                    // check if data is nested
+                                    if (typeof data[0] === 'object') {
+                                        if (data[0].items) {
+                                            for (const item of data) {
+                                                this.selectOptions.push({
+                                                    name: item.name,
+                                                    value: item.value,
+                                                })
+
+                                                for (const subItem of item.items) {
+                                                    this.selectOptions.push({
+                                                        name: subItem.name,
+                                                        value: subItem.value,
+                                                        parent: item.value,
+                                                    })
+                                                }
+                                            }
+                                        } else {
+                                            for (const item of data) {
+                                                this.selectOptions.push({
+                                                    name: item.name,
+                                                    value: item.value,
+                                                })
+                                            }
+                                        }
+                                    } else {
+                                        for (const item of data) {
+                                            this.selectOptions.push(item)
+                                        }
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.warn(error)
+                                })
+                                .then(() => resolve())
+                        } else {
+                            const tags = this.options.options
+                                .replace(/\s*,\s*/g, ',')
+                                .split(',')
+
+                            for (const tag of tags) {
+                                this.selectOptions.push({
+                                    name: tag,
+                                    value: tag,
+                                })
+                            }
+
+                            resolve()
+                        }
                     }
-                }
+                }).then(() => {
+                    if (
+                        this.list.length === 0 &&
+                        !this.model.changed &&
+                        this.options.default
+                    ) {
+                        const defaultTags = this.options.default
+                            .replace(/\s*,\s*/g, ',')
+                            .split(',')
+
+                        for (const tag of defaultTags) {
+                            this.list.push(tag)
+                        }
+                    }
+
+                    this.tagsLoaded()
+                })
 
                 // console.log(pluginName, 'created', this)
+            },
+
+            tagsLoaded() {
+                const key = this.$props.contentmodel.list
+                    ? 'list'
+                    : this.$props.contentmodel.tags
+                    ? 'tags'
+                    : false
+
+                if (key) {
+                    for (let tag of this.$props.contentmodel[key]) {
+                        const newOption = { name: tag, value: tag }
+                        const option = this.selectOptions.find(
+                            (o) => o.value === tag,
+                        )
+
+                        if (option) {
+                            this.list.push(option)
+                        } else {
+                            this.selectOptions.unshift(newOption)
+                            this.list.push(newOption)
+                        }
+                    }
+                }
             },
 
             isTagsChanged() {
@@ -146,8 +243,9 @@
 
             addOption(text) {
                 const value = (text || '').trim()
-                this.selectOptions.push(value)
-                this.list.push(value)
+                const option = { name: value, value }
+                this.selectOptions.push(option)
+                this.list.push(option)
             },
 
             loadOptions() {
@@ -184,63 +282,68 @@
                     }
                 }
 
-                this.api
-                    .get('cdn/stories', {
-                        version: 'draft',
-                        content_type: contentType,
-                        starts_with,
-                    })
-                    .then((result) => result.data.stories)
-                    .then((stories) => {
-                        const tags = {}
+                if (contentType) {
+                    this.api
+                        .get('cdn/stories', {
+                            version: 'draft',
+                            content_type: contentType,
+                            starts_with,
+                        })
+                        .then((result) => result.data.stories)
+                        .then((stories) => {
+                            const tags = {}
 
-                        for (let tag of this.list) {
-                            if (tag) {
-                                tags[tag] = true
+                            for (let tag of this.list) {
+                                if (tag) {
+                                    tags[tag] = true
+                                }
                             }
-                        }
 
-                        stories.forEach((story) => {
-                            for (let [key, value] of Object.entries(
-                                story.content,
-                            )) {
-                                if (
-                                    typeof value === 'object' &&
-                                    value.plugin === this.model.plugin &&
-                                    (this.options.key
-                                        ? key === this.options.key
-                                        : true) &&
-                                    Array.isArray(value.list)
-                                ) {
-                                    for (let tag of value.list) {
-                                        let text = (tag + '').trim()
-                                        if (text) {
-                                            tags[text] = true
+                            stories.forEach((story) => {
+                                for (let [key, value] of Object.entries(
+                                    story.content,
+                                )) {
+                                    if (
+                                        typeof value === 'object' &&
+                                        value.plugin === this.model.plugin &&
+                                        (this.options.key
+                                            ? key === this.options.key
+                                            : true) &&
+                                        Array.isArray(value.list)
+                                    ) {
+                                        for (let tag of value.list) {
+                                            let text = (tag + '').trim()
+                                            if (text) {
+                                                tags[text] = true
+                                            }
                                         }
                                     }
                                 }
+                            })
+
+                            return Object.keys(tags).sort((a, b) =>
+                                a
+                                    .toLocaleLowerCase()
+                                    .localeCompare(b.toLocaleLowerCase()),
+                            )
+                        })
+                        .then((list) => {
+                            this.loading = false
+                            this.optionsLoaded = true
+
+                            this.selectOptions.length = 0
+                            for (let tag of list) {
+                                this.selectOptions.push({
+                                    name: tag,
+                                    value: tag,
+                                })
                             }
                         })
-
-                        return Object.keys(tags).sort((a, b) =>
-                            a
-                                .toLocaleLowerCase()
-                                .localeCompare(b.toLocaleLowerCase()),
-                        )
-                    })
-                    .then((list) => {
-                        this.loading = false
-                        this.optionsLoaded = true
-
-                        this.selectOptions.length = 0
-                        for (let tag of list) {
-                            this.selectOptions.push(tag)
-                        }
-                    })
-                    .catch((error) => {
-                        console.warn(error)
-                        this.loading = false
-                    })
+                        .catch((error) => {
+                            console.warn(error)
+                            this.loading = false
+                        })
+                }
             },
         },
         watch: {
@@ -253,7 +356,7 @@
             list: {
                 handler: function (value) {
                     if (this.isTagsChanged()) {
-                        this.model.list = [...value]
+                        this.model.list = value.map((i) => i.value)
                         this.model.changed = true
                         this.$emit('changed-model', this.model)
                     }
@@ -269,7 +372,7 @@
 <style lang="scss">
     .lc-shared-tags {
         position: relative;
-        height: 250px;
+        height: 300px;
         overflow: hidden;
     }
 
@@ -307,6 +410,8 @@
             display: flex;
             flex-flow: row nowrap;
             font-weight: 500;
+            padding: 0 0.75rem;
+            min-height: 2rem;
             align-items: center;
             color: #1b243f;
             background-color: #fff;
@@ -319,15 +424,19 @@
             &::before {
                 content: '✓';
                 display: inline-block;
-                margin-right: 0.5rem;
+                margin-right: 0.75rem;
                 color: #1b243f;
                 opacity: 0;
-                transition: opacity 0.2s;
+                transition: opacity 0.2s, color 0.1s;
             }
 
             &--highlight {
                 color: #fff;
                 background-color: #00b3b0;
+
+                &::before {
+                    color: #fff;
+                }
             }
 
             &--selected {
@@ -343,6 +452,10 @@
                     color: #fff;
                     background-color: #00b3b0;
                 }
+            }
+
+            .indent {
+                margin-right: 0.75rem;
             }
         }
     }
