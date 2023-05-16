@@ -1,24 +1,11 @@
 {
-    "name": "storyblok-fieldtype",
-    "description": "A Storyblok Field-Type Plugin Project",
+    "name": "klimaportal-icons",
+    "description": "",
     "author": {
-        "name": "Storyblok",
-        "email": "it@storyblok.com",
-        "url": "https://www.storyblok.com/"
+        "name": "Oliver Liermann",
+        "email": "oliver@logi.codes"
     },
-    "contributors": [
-        {
-            "name": "Alexander Feiglstorfer",
-            "email": "af@storyblok.com",
-            "url": "https://www.storyblok.com/"
-        },
-        {
-            "name": "Dominik Angerer",
-            "email": "da@storyblok.com",
-            "url": "https://www.storyblok.com/"
-        }
-    ],
-    "version": "2.0.0",
+    "version": "1.0.0",
     "private": true,
     "scripts": {
         "dev": "npm run serve",
