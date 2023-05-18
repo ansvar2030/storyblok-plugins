@@ -22,6 +22,17 @@
 
     import iconX from '!svg-inline-loader!./icons/x.svg'
 
+    window.mapsReady = new Promise((resolve) => {
+        window.mapsReadyResolve = resolve
+    })
+
+    function appendMapsScript(apiKey) {
+        const script = document.createElement('script')
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=mapsReadyResolve&libraries=places&v=weekly`
+        script.defer = true
+        document.body.appendChild(script)
+    }
+
     export default {
         mixins: [window.Storyblok.plugin],
 
@@ -51,7 +62,6 @@
 
         methods: {
             initWith() {
-                console.log(this)
                 return {
                     plugin: pluginName,
                     ...this.address,
@@ -67,20 +77,19 @@
 
                 return this.api
                     .get('cdn/stories', {
-                        version: 'draft',
                         content_type: 'settings',
                         starts_with: startsWith,
                     })
                     .then((result) => {
                         if (!result?.data?.stories?.[0]) {
-                            return this.api.get('cdn/stories/system/settings', {
-                                version: 'draft',
-                            })
+                            return this.api
+                                .get('cdn/stories/system/settings')
+                                .then((result) => result?.data?.story)
                         }
 
-                        return result
+                        return result.data.stories[0]
                     })
-                    .then((result) => result?.data?.stories?.[0]?.content)
+                    .then((story) => story?.content)
                     .catch((error) => {
                         console.warn('failed to retrieve settings', error)
                         return false
@@ -255,6 +264,25 @@
 
         mounted() {
             window.mapsReady.then(() => this.initMap(window.google))
+
+            this.api
+                .get('cdn/stories/system/settings')
+                .then((result) => result?.data?.story?.content?.keys)
+                .then((keys) => {
+                    if (!keys?.length) {
+                        return false
+                    }
+                    const key = keys.find((item) => item.name === 'google-maps')
+                    return key ? key.value : false
+                })
+                .then((key) => {
+                    if (!key) {
+                        console.warn('maps key not found')
+                        return
+                    }
+
+                    appendMapsScript(key)
+                })
         },
     }
 </script>
