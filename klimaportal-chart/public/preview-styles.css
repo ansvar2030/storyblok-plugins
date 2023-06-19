@@ -1,0 +1,15 @@
+html .MuiContainer-root {
+    max-width: none;
+}
+
+html .SbAppContent-root {
+    padding: 0;
+}
+
+iframe.MuiBox-root {
+    height: 660px !important;
+}
+
+html #app > .MuiContainer-root {
+    padding: 1rem;
+}
