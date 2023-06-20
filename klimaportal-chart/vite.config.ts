@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
 import * as querystring from 'querystring'
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
+import { fileURLToPath, URL } from 'url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -30,6 +31,14 @@ export default defineConfig({
     server: {
         port: 8080,
         host: true,
+    },
+    resolve: {
+        alias: [
+            {
+                find: '@',
+                replacement: fileURLToPath(new URL('./src', import.meta.url)),
+            },
+        ],
     },
 })
 

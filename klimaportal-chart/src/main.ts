@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 
 import App from './App.vue'
-
+import { createPinia } from 'pinia'
 import { Quasar } from 'quasar'
 import quasarLang from 'quasar/lang/de'
 import quasarIconSet from 'quasar/icon-set/svg-material-icons'
@@ -23,6 +23,9 @@ if (!document.querySelector('#app')) {
 }
 
 const app = createApp(App)
+
+const pinia = createPinia()
+app.use(pinia)
 
 app.provide('filters', filters)
 

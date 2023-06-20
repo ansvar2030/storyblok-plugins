@@ -1,58 +1,13 @@
 <script setup lang="ts">
-// import ModalToggle from './ModalToggle.vue'
-// import Counter from './Counter.vue'
-// import AssetSelector from './AssetSelector.vue'
 import { useFieldPlugin } from '../useFieldPlugin'
-import { ref, markRaw } from 'vue'
+import { ref } from 'vue'
 import { matAddchart } from '@quasar/extras/material-icons'
 import Settings from './tabs/Settings.vue'
 
 const plugin = useFieldPlugin()
 
-// export default {
-//     components: {
-//         Settings,
-//     },
-
-//     data() {
-//         return {
-//             plugin: markRaw(plugin),
-//             matAddchart: markRaw(matAddchart),
-
-//             presetList: [
-//                 'bar',
-//                 'area',
-//                 'line',
-//                 'radial',
-//                 'bar-stacked',
-//                 'area-stacked',
-//                 'line-stacked',
-//                 'donut',
-//                 'bar-line',
-//             ],
-
 const splitterModel = ref(20)
 const tab = ref('setup')
-//         }
-//     },
-// }
-
-// function closeModal() {
-//     plugin.actions.setModalOpen(false)
-// }
-
-// const optionsHTML = presetList.map((name) => {
-//     return {
-//         label: `<img
-//                     src="/chart-presets/${name}.svg"
-//                     alt=""
-//                     width="111"
-//                     height="106"
-//                 />`,
-//         value: name,
-//         html: true,
-//     }
-// })
 </script>
 
 <template>

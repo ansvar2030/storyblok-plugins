@@ -4,10 +4,10 @@ import FieldPluginProvider from './components/FieldPluginProvider.vue'
 </script>
 
 <template>
-  <FieldPluginProvider>
-    <template v-slot:loading><span>Loading...</span></template>
-    <template v-slot:error><span>Error</span></template>
+    <FieldPluginProvider>
+        <template v-slot:loading><span>Loading...</span></template>
+        <template v-slot:error><span>Error</span></template>
 
-    <FieldPlugin />
-  </FieldPluginProvider>
+        <FieldPlugin />
+    </FieldPluginProvider>
 </template>
