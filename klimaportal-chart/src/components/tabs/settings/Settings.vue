@@ -1,16 +1,6 @@
 <script setup lang="ts">
-// import ModalToggle from './ModalToggle.vue'
-// import Counter from './Counter.vue'
-// import AssetSelector from './AssetSelector.vue'
-// import { useFieldPlugin } from '../../useFieldPlugin'
-// import { ref } from 'vue'
-// import { matAddchart } from '@quasar/extras/material-icons'
 import ChartSettings from './ChartSettings.vue'
 import DataSetup from './DataSetup.vue'
-
-// function closeModal() {
-//     plugin.actions.setModalOpen(false)
-// }
 
 const presetList = [
     'bar',
@@ -23,19 +13,6 @@ const presetList = [
     'donut',
     'bar-line',
 ]
-
-// const optionsHTML = presetList.map((name) => {
-//     return {
-//         label: `<img
-//                     src="/chart-presets/${name}.svg"
-//                     alt=""
-//                     width="111"
-//                     height="106"
-//                 />`,
-//         value: name,
-//         html: true,
-//     }
-// })
 </script>
 
 <template>
@@ -92,7 +69,7 @@ header {
     grid-row: 2;
     display: flex;
     flex-flow: row wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: flex-start;
     align-self: self-start;
     gap: 0.5rem;

@@ -57,14 +57,17 @@
                     v-model="chartData.grid.show"
                     label="Gitter"
                 />
-                <q-select
-                    v-model="chartData.grid.value"
-                    :options="chartData.grid.options"
-                    emit-value
-                    borderless
-                    map-options
-                    :disable="!chartData.grid.show"
-                />
+                <div class="sub">
+                    <q-select
+                        v-model="chartData.grid.value"
+                        :options="chartData.grid.options"
+                        emit-value
+                        borderless
+                        dense
+                        map-options
+                        :disable="!chartData.grid.show"
+                    />
+                </div>
             </div>
             <div class="setting tooltip">
                 <q-checkbox
@@ -73,28 +76,55 @@
                 />
             </div>
             <div class="setting x-axis">
-                X-Achse
-                <q-select
-                    v-model="chartData.xAxis.type.value"
-                    :options="chartData.xAxis.type.options"
-                    emit-value
-                    borderless
-                    map-options
-                />
-                <q-select
-                    v-show="chartData.xAxis.type.value === 'date'"
-                    v-model="chartData.xAxis.dateFormat.value"
-                    :options="chartData.xAxis.dateFormat.options"
-                    borderless
-                    map-options
-                />
-                <q-select
-                    v-model="chartData.xAxis.angle.value"
-                    :options="chartData.xAxis.angle.options"
-                    emit-value
-                    borderless
-                    map-options
-                />
+                <div class="sub">
+                    <div class="label">X-Achse</div>
+
+                    <q-select
+                        v-model="chartData.xAxis.type.value"
+                        :options="chartData.xAxis.type.options"
+                        emit-value
+                        borderless
+                        dense
+                        map-options
+                        label="Typ"
+                    />
+                    <q-select
+                        v-show="chartData.xAxis.type.value === 'date'"
+                        v-model="chartData.xAxis.dateFormat.value"
+                        :options="chartData.xAxis.dateFormat.options"
+                        borderless
+                        dense
+                        map-options
+                        label="Datumsformat"
+                    />
+                    <!-- <q-select
+                        v-model="chartData.xAxis.angle.value"
+                        :options="chartData.xAxis.angle.options"
+                        emit-value
+                        borderless
+                        dense
+                        map-options
+                        label="Winkel"
+                    /> -->
+                    <div class="angle">
+                        <div class="label">Winkel</div>
+                        <q-slider
+                            :modelValue="chartData.xAxis.angle.value"
+                            @change="
+                                (value) => (chartData.xAxis.angle.value = value)
+                            "
+                            label
+                            label-always
+                            switch-label-side
+                            markers
+                            :label-value="chartData.xAxis.angle.value + ' °'"
+                            :min="0"
+                            :step="22.5"
+                            :max="90"
+                            dense
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -124,10 +154,13 @@ export default {
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/tools.scss';
+
 .chart-settings {
     display: grid;
     grid-template-columns: auto min-content;
     grid-template-rows: min-content auto;
+    gap: 0 var(--k-gap);
 }
 
 .setting {
@@ -158,7 +191,7 @@ export default {
                 background-color: #000;
                 transform: scale(0, 1);
                 transform-origin: left;
-                transition: transform 0.3s ease-in-out;
+                transition: transform 0.25s $ease-out-sine;
             }
         }
 
@@ -172,7 +205,7 @@ export default {
     }
 
     &.title {
-        margin-top: 1.5rem;
+        margin-top: 1.25rem;
     }
 
     &.description {
@@ -188,7 +221,7 @@ export default {
             margin: 0 auto;
             padding: 0 0.5rem;
             width: fit-content;
-            background-color: #fff;
+            background-color: #f9f9f9;
         }
 
         .line {
@@ -215,10 +248,29 @@ export default {
         }
     }
 
-    &.group-left {
-        grid-column: 1;
-        grid-row: 2;
+    &.grid {
+        margin-top: 1.5rem;
     }
+
+    &.x-axis {
+        margin-top: 1.5rem;
+    }
+
+    .sub {
+        display: flex;
+        flex-flow: column;
+        gap: 0.5rem;
+        padding: 0 0 0 2.5rem;
+    }
+
+    .label {
+        user-select: none;
+    }
+}
+
+.group-left {
+    grid-column: 1;
+    grid-row: 2;
 }
 
 .chart-container {

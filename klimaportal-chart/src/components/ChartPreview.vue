@@ -20,35 +20,66 @@
             <div class="title">
                 <q-input
                     v-model="chartData.title.value"
-                    label="Titel"
+                    label2="Titel"
                     ref="inputTitle"
                     :class="['input-title', { show: chartData.title?.show }]"
                     dense
-                    borderless
+                    @update:model-value="
+                        (text) =>
+                            !!text.trim()
+                                ? (chartData.title.show = true)
+                                : false
+                    "
                 />
             </div>
 
             <div class="description">
                 <q-input
                     v-model="chartData.description.value"
-                    label="Beschreibung"
+                    label2="Beschreibung"
                     ref="inputDescription"
                     :class="[
                         'input-description',
                         { show: chartData.description?.show },
                     ]"
                     dense
-                    borderless
+                    @update:model-value="
+                        (text) =>
+                            !!text.trim()
+                                ? (chartData.description.show = true)
+                                : false
+                    "
                 />
             </div>
         </header>
 
         <apexchart
             ref="chart"
-            type="line"
+            :type="options.chart.type"
             :options="options"
             :series="series"
+            :height="options.chart.height"
         ></apexchart>
+
+        <footer v-if="!editable">
+            <div
+                class="source"
+                v-if="!!chartData.source.value.trim()"
+            >
+                <span>Quelle:</span> {{ chartData.source.value }}
+            </div>
+        </footer>
+        <footer v-else>
+            <div class="source">
+                <span>Quelle:</span>
+                <q-input
+                    v-model="chartData.source.value"
+                    ref="inputSource"
+                    :class="['input-source']"
+                    dense
+                />
+            </div>
+        </footer>
     </div>
 </template>
 
@@ -103,7 +134,6 @@ export default {
     display: flex;
     flex-flow: column;
     border: 1px solid #000;
-    padding: 1rem;
     box-shadow: 10px 10px 0px 0px #000;
 
     &.width {
@@ -119,6 +149,7 @@ export default {
     header {
         display: flex;
         flex-flow: column;
+        padding: 1rem 1rem 0;
 
         .q-input {
             opacity: 0.5;
@@ -129,28 +160,22 @@ export default {
         }
     }
 
+    footer {
+        display: flex;
+        flex-flow: column;
+        padding: 0 1rem 1rem;
+    }
+
     .title {
-        // position: relative;
-
-        // &.visible {
-        //     h3 {
-        //         opacity: 1;
-        //     }
-        // }
-
         h3 {
             font-size: 1.25rem;
             font-weight: 700;
             line-height: 1;
             margin-bottom: 0.5rem;
-            // opacity: 0;
         }
 
         .q-input {
-            // position: absolute;
-            // top: 0;
-            // opacity: 1;
-            // transform: translate(0, -1.6rem);
+            // margin-top: -0.5rem;
 
             :deep(input) {
                 font-size: 1.25rem;
@@ -161,25 +186,13 @@ export default {
     }
 
     .description {
-        // position: relative;
-
-        // &.visible {
-        //     p {
-        //         opacity: 1;
-        //     }
-        // }
-
         p {
             font-size: 1rem;
             font-weight: 500;
-            // opacity: 0;
         }
 
         .q-input {
-            // position: absolute;
-            // top: 0;
-            // opacity: 1;
-            // transform: translate(0, -1.6rem);
+            // margin-top: -1rem;
 
             :deep(input) {
                 font-size: 1rem;
@@ -188,15 +201,32 @@ export default {
         }
     }
 
-    // :deep(header) {
-    //     .q-input {
-    //         position: absolute;
-    //         top: 0;
-    //         opacity: 0.5;
-    //         border: 1px solid red;
-    //         transform: translate(0, 0rem);
-    //     }
-    // }
+    .source {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        font-weight: 500;
+        color: var(--k-color-gray-400);
+        user-select: none;
+
+        .q-input {
+            flex: auto 1 0;
+
+            :deep(.q-field__control) {
+                height: 1.5rem;
+            }
+
+            :deep(.q-field__native) {
+                font-size: 0.75rem;
+                font-weight: 500;
+                line-height: 1.2;
+                padding: 0;
+            }
+        }
+    }
 
     // .vue-apexcharts {
     //     // height: 260px;

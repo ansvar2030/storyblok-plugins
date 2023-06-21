@@ -22,6 +22,10 @@ export const useChartDataStore = defineStore('chart-data', () => {
         value: '',
     })
 
+    const source = ref({
+        value: '',
+    })
+
     const grid = ref({
         show: true,
         options: [
@@ -46,7 +50,7 @@ export const useChartDataStore = defineStore('chart-data', () => {
         show: true,
     })
 
-    const xAxis = {
+    const xAxis = ref({
         type: {
             options: [
                 {
@@ -58,20 +62,43 @@ export const useChartDataStore = defineStore('chart-data', () => {
                     label: 'Datum',
                 },
             ],
-            value: ref(''),
+            value: '',
         },
         dateFormat: {
             options: ['YYYY', 'MM.YYYY', 'DD.MM.YYYY'],
-            value: ref(''),
+            value: '',
         },
         angle: {
-            options: ['0', '22,5', '45', '67,5', '90'],
-            value: ref(''),
+            // options: ['0°', '22,5°', '45°', '67,5°', '90°'],
+            value: 0,
+        },
+    })
+    xAxis.value.type.value = xAxis.value.type.options[0].value
+    xAxis.value.dateFormat.value = xAxis.value.dateFormat.options[0]
+    // xAxis.angle.value = xAxis.angle.options[0]
+
+    const seriesDefault = {
+        name: '',
+        dataReference: '',
+        color: '',
+        type: '',
+        dataLabel: '',
+        tooltip: {
+            show: true,
+            format: '',
+            precision: 0,
+        },
+        yAxis: {
+            separate: false,
+            position: 'left',
+            unit: '',
+            format: '',
+            precision: 0,
         },
     }
-    xAxis.type.value = xAxis.type.options[0].value
-    xAxis.dateFormat.value = xAxis.dateFormat.options[0]
-    xAxis.angle.value = xAxis.angle.options[0]
+
+    const seriesList = ref([])
+    seriesList.value.push({ ...seriesDefault })
 
     const defaultOptions = {
         chart: {
@@ -90,7 +117,8 @@ export const useChartDataStore = defineStore('chart-data', () => {
                 show: true,
             },
             labels: {
-                rotate: -45,
+                rotate: 0,
+                rotateAlways: true,
             },
         },
         yaxis: [
@@ -131,8 +159,8 @@ export const useChartDataStore = defineStore('chart-data', () => {
         },
         legend: {
             horizontalAlign: 'left',
-            offsetY: 10,
-            offsetX: 0,
+            // offsetY: 10,
+            // offsetX: 0,
         },
         tooltip: {
             enabled: true,
@@ -151,41 +179,43 @@ export const useChartDataStore = defineStore('chart-data', () => {
         },
     }
 
-    const options = computed(() => {
-        const opts = { ...defaultOptions }
-
-        opts.grid.show = grid.value.show
-        opts.grid.xaxis.lines.show = ['vertical', 'both'].includes(
-            grid.value.value,
-        )
-
-        opts.grid.yaxis.lines.show = ['horizontal', 'both'].includes(
-            grid.value.value,
-        )
-
-        opts.tooltip.enabled = tooltip.value.show
-
-        return opts
-    })
-
-    const series = computed(() => {
-        const dataSeries = [
-            {
-                name: 'Emissionen',
-                data: dummyData.estEmissions,
-                type: 'line',
-            },
-            {
-                name: '1,5°C Pfad ',
-                data: dummyData.onePoint5Path,
-                type: 'area',
-            },
-        ]
-
-        return dataSeries
-    })
-
     const transformedData = computed(() => {
+        const options = computed(() => {
+            const opts = { ...defaultOptions }
+
+            opts.grid.show = grid.value.show
+            opts.grid.xaxis.lines.show = ['vertical', 'both'].includes(
+                grid.value.value,
+            )
+
+            opts.grid.yaxis.lines.show = ['horizontal', 'both'].includes(
+                grid.value.value,
+            )
+
+            opts.tooltip.enabled = tooltip.value.show
+
+            opts.xaxis.labels.rotate = 0 - xAxis.value.angle.value
+
+            return opts
+        })
+
+        const series = computed(() => {
+            const dataSeries = [
+                {
+                    name: 'Emissionen',
+                    data: dummyData.estEmissions,
+                    type: 'line',
+                },
+                {
+                    name: '1,5°C Pfad ',
+                    data: dummyData.onePoint5Path,
+                    type: 'area',
+                },
+            ]
+
+            return dataSeries
+        })
+
         return {
             width: width.value.value,
             title: title.value,
@@ -199,9 +229,12 @@ export const useChartDataStore = defineStore('chart-data', () => {
         width,
         title,
         description,
+        source,
         grid,
         tooltip,
         xAxis,
+        seriesDefault,
+        seriesList,
         transformedData,
     }
 })
