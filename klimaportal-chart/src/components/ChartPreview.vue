@@ -126,6 +126,15 @@ export default {
             }, 100)
         },
     },
+
+    watch: {
+        width(val) {
+            // console.log(this.$refs.chart)
+            this.$nextTick(() => {
+                this.$refs.chart.refresh()
+            })
+        },
+    },
 }
 </script>
 

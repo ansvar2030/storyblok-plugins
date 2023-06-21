@@ -7,9 +7,21 @@ html .SbAppContent-root {
 }
 
 iframe.MuiBox-root {
-    height: 660px !important;
+    height: 100vh !important;
 }
 
 html #app > .MuiContainer-root {
     padding: 1rem;
+}
+
+html .SbAppHeader-root {
+    display: none;
+}
+
+html
+    .SbAppContent-root
+    > .MuiContainer-root
+    > .MuiPaper-root
+    > .MuiButtonBase-root {
+    display: none;
 }

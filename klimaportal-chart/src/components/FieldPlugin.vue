@@ -7,7 +7,7 @@ import TabData from './tabs/data/Data.vue'
 
 const plugin = useFieldPlugin()
 
-const tab = ref('setup')
+const tab = ref('data')
 </script>
 
 <template>

@@ -113,14 +113,14 @@ const numberFormat = (value, precision = 2) => {
 //     return output
 // }
 
-// function firstUpperCase(str) {
-//     if (typeof str !== 'string') {
-//         console.warn('string expected', str)
-//         return str
-//     }
+function firstUpperCase(str) {
+    if (typeof str !== 'string') {
+        console.warn('string expected', str)
+        return str
+    }
 
-//     return str.substring(0, 1).toUpperCase() + str.substring(1)
-// }
+    return str.substring(0, 1).toUpperCase() + str.substring(1)
+}
 
 const filters = {
     number: (value, precision) => numberFormat(value, precision),
@@ -135,7 +135,7 @@ const filters = {
     //     date: filterDate,
     //     period: filterPeriod,
     //     dateTimeFormatString: 'DD.MM.YYYY / HH:mm Uhr',
-    //     firstUpperCase,
+    firstUpperCase,
 }
 
 export default filters
