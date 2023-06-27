@@ -1,19 +1,37 @@
 <script setup lang="ts">
 import { useFieldPlugin } from '../useFieldPlugin'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { matAddchart } from '@quasar/extras/material-icons'
-import TabSettings from './tabs/settings/Settings.vue'
+import TabSetup from './tabs/setup/Setup.vue'
 import TabData from './tabs/data/Data.vue'
+import { useSheetManagerStore } from '@/stores/sheet-manager'
 
 const plugin = useFieldPlugin()
+console.log('plugin', plugin)
 
-const tab = ref('data')
+const sheetManager = useSheetManagerStore()
+onMounted(() => {
+    sheetManager.reset()
+})
+
+const tab = ref('setup')
 </script>
 
 <template>
     <div class="container">
         <header>
             <h1>Diagramm <q-icon :name="matAddchart" /> Editor</h1>
+            <q-btn
+                :icon="
+                    plugin.data.isModalOpen ? 'fullscreen_exit' : 'fullscreen'
+                "
+                round
+                color="primary"
+                title="In Overlay öffnen"
+                @click="
+                    () => plugin.actions.setModalOpen(!plugin.data.isModalOpen)
+                "
+            />
         </header>
 
         <q-tabs
@@ -46,7 +64,7 @@ const tab = ref('data')
             transition-next="jump-up"
         >
             <q-tab-panel name="setup">
-                <tab-settings />
+                <tab-setup />
             </q-tab-panel>
 
             <q-tab-panel name="data">
@@ -84,6 +102,13 @@ const tab = ref('data')
 
     :deep(.q-tab-panel) {
         background-color: #f9f9f9;
+    }
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 1rem;
     }
 }
 </style>

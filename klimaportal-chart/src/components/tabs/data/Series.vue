@@ -2,7 +2,7 @@
     <div class="series-list">
         <q-list bordered>
             <q-expansion-item
-                group="somegroup"
+                group="group"
                 icon="dataset_linked"
                 :header-style="{ color: item?.color?.hex }"
                 :label="item.name || 'Neuer Datensatz'"
@@ -18,6 +18,7 @@
                     <div class="row">
                         <div class="option">
                             <q-input
+                                class="name"
                                 :modelValue="item.name"
                                 @change="(value) => (item.name = value)"
                                 label="Datensatz Name"
@@ -25,24 +26,14 @@
                         </div>
 
                         <div class="option">
-                            <q-input
-                                v-model="item.dataReference"
-                                label="Datenreferenz"
-                                bottom-slots
-                            >
-                                <template v-slot:hint>
-                                    Gib den Bereich aus deinem GoogleSheet für
-                                    diesen Datensatz an.
-                                </template>
-                                <template v-slot:append>
-                                    <q-btn
-                                        icon="help"
-                                        flat
-                                        round
-                                        @click="dialogDataReferenceHelp = true"
-                                    />
-                                </template>
-                            </q-input>
+                            <RangeSelect
+                                ref="Datenreferenz"
+                                label="Datenbereich"
+                                :model-value="item.range.text"
+                                @update:range="(val) => (item.range = val)"
+                                @update:data="(val) => (item.data = val)"
+                                hint="Gib den Bereich aus deinem GoogleSheet für diesen Datensatz an."
+                            />
                         </div>
                     </div>
 
@@ -67,7 +58,7 @@
                                                 item?.color?.key?.replace(
                                                     '.',
                                                     ' ',
-                                                ),
+                                                ) || '',
                                             )
                                         }}</q-item-label>
                                     </span>
@@ -112,16 +103,18 @@
                         </div>
                     </div>
 
-                    <q-separator />
+                    <!-- <q-separator />
                     <div class="row">tooltip</div>
 
                     <q-separator />
-                    <div class="row">yAxis</div>
+                    <div class="row">yAxis</div> -->
 
                     <div class="actions">
                         <q-btn
                             class="remove"
                             flat
+                            color="grey-8"
+                            size="sm"
                             label="Datensatz entfernen"
                             icon="delete"
                             @click="dialogRemoveSeries = { show: true, item }"
@@ -132,16 +125,14 @@
         </q-list>
 
         <q-btn
-            outline
             label="Datensatz hinzufügen"
+            color="primary"
+            outline
             icon="add"
             @click="addSeries"
         />
 
-        <q-dialog
-            v-model="dialogRemoveSeries.show"
-            persistent
-        >
+        <q-dialog v-model="dialogRemoveSeries.show">
             <q-card>
                 <q-card-section class="row items-center">
                     <q-avatar icon="warning" />
@@ -164,53 +155,20 @@
                 </q-card-actions>
             </q-card>
         </q-dialog>
-
-        <q-dialog
-            v-model="dialogDataReferenceHelp"
-            persistent
-        >
-            <q-card>
-                <q-card-section class="row items-center">
-                    <span class="q-ml-sm">Datenreferenz</span>
-                </q-card-section>
-
-                <q-card-actions align="right">
-                    <q-btn
-                        label="Schließen"
-                        flat
-                        v-close-popup
-                    />
-                </q-card-actions>
-            </q-card>
-        </q-dialog>
     </div>
 </template>
 
 <script>
 import { mapState } from 'pinia'
 import { useChartDataStore } from '@/stores/chart-data'
+import RangeSelect from '@/components/RangeSelect.vue'
 
 export default {
     inject: ['filters'],
-    // props: {
-    //     name: { type: String, default: '' },
-    //     dataReference: { type: String, default: '' },
-    //     color: { type: String, default: '' },
-    //     type: { type: String, default: '' },
-    //     dataLabel: { type: String, default: '' },
-    //     tooltip: {
-    //         show: { type: Boolean, default: true },
-    //         format: { type: String, default: '' },
-    //         precision: { type: Number, default: 0 },
-    //     },
-    //     yAxis: {
-    //         separate: { type: Boolean, default: false },
-    //         position: { type: String, default: '' },
-    //         unit: { type: String, default: '' },
-    //         format: { type: String, default: '' },
-    //         precision: { type: Number, default: 0 },
-    //     },
-    // },
+
+    components: {
+        RangeSelect,
+    },
 
     setup() {
         const chartData = useChartDataStore()
@@ -224,22 +182,11 @@ export default {
         return {
             openedIndex: 0,
             dialogRemoveSeries: { show: false, item: undefined },
-            dialogDataReferenceHelp: false,
         }
     },
 
     computed: {
         ...mapState(useChartDataStore, ['seriesList']),
-    },
-
-    watch: {
-        // seriesList: {
-        //     handler(value, oldValue) {
-        //         console.log(value.length, oldValue.length)
-        //         // this.openedIndex = this.seriesList.length - 1
-        //     },
-        //     deep: true
-        // },
     },
 
     methods: {
@@ -280,6 +227,10 @@ export default {
         display: flex;
         align-items: center;
         gap: var(--k-gap);
+    }
+
+    .name {
+        margin-top: 0.3rem;
     }
 
     .q-btn {

@@ -2,7 +2,8 @@ import { createApp } from 'vue'
 
 import App from './App.vue'
 import { createPinia } from 'pinia'
-import { Quasar } from 'quasar'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { Quasar, Notify } from 'quasar'
 import quasarLang from 'quasar/lang/de'
 import quasarIconSet from 'quasar/icon-set/svg-material-icons'
 import VueApexCharts from 'vue3-apexcharts'
@@ -25,12 +26,13 @@ if (!document.querySelector('#app')) {
 const app = createApp(App)
 
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 
 app.provide('filters', filters)
 
 app.use(Quasar, {
-    plugins: {}, // import Quasar plugins and add here
+    plugins: { Notify }, // import Quasar plugins and add here
     lang: quasarLang,
     iconSet: quasarIconSet,
     /*

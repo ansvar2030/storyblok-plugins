@@ -97,12 +97,6 @@ header {
         width: 100%;
         margin-bottom: 0.5rem;
     }
-
-    .hint {
-        font-size: 0.75rem;
-        line-height: 1.2;
-        color: var(--k-color-gray-500);
-    }
 }
 
 .series-data {

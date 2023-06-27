@@ -16,7 +16,7 @@ const presetList = [
 </script>
 
 <template>
-    <div class="container">
+    <div class="setup">
         <header>
             <h2>Diagrammtyp</h2>
             <p>
@@ -51,7 +51,7 @@ const presetList = [
 </template>
 
 <style scoped lang="scss">
-.container {
+.setup {
     display: grid;
     grid-template-columns: minmax(25%, 50%) 1fr;
     grid-template-rows: min-content min-content 1fr;
@@ -83,9 +83,10 @@ header {
     }
 }
 
-.chart-preview {
+.chart-settings {
     grid-column: 2;
     grid-row: 2;
+    margin-bottom: 2rem;
 }
 
 .data-setup {
