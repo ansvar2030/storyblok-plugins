@@ -125,7 +125,9 @@
                 <RangeSelect
                     ref="xAxisRange"
                     label="Bereich für X-Achse"
-                    @update:range="(val) => (xAxis.range = val)"
+                    :sheet="chartData.xAxis.sheet"
+                    :range="chartData.xAxis.range"
+                    @update:range-details="(val) => (xAxis.rangeDetails = val)"
                     @update:data="(val) => (xAxis.data = val)"
                 />
             </div>
@@ -185,7 +187,7 @@ export default {
         return {
             template: undefined,
             xAxis: {
-                range: '',
+                rangeDetails: {},
                 data: [],
             },
 
@@ -260,6 +262,13 @@ export default {
     },
 
     watch: {
+        'xAxis.rangeDetails': {
+            handler() {
+                this.chartData.xAxis.range = this.xAxis.rangeDetails.text
+                this.chartData.xAxis.sheet = this.xAxis.rangeDetails.sheet
+            },
+            deep: true,
+        },
         'xAxis.data': {
             handler() {
                 this.chartData.xAxis.categories = this.xAxis.data

@@ -53,6 +53,8 @@ export const useChartDataStore = defineStore(
         })
 
         const xAxis = ref({
+            range: '',
+            sheet: '',
             type: {
                 options: [
                     {
@@ -151,7 +153,7 @@ export const useChartDataStore = defineStore(
                     intersect: false,
                     x: {
                         show: false,
-                        formatter: (v) => new Date(v).getFullYear(),
+                        // formatter: (v) => new Date(v).getFullYear(),
                     },
                     y: {
                         formatter: (v) => Math.round(v) + ' Mio. t',
@@ -286,6 +288,31 @@ export const useChartDataStore = defineStore(
             },
         ]
 
+        const chartTypeOptions = [
+            {
+                label: 'Line',
+                value: 'line',
+            },
+            {
+                label: 'Area',
+                value: 'area',
+            },
+            {
+                label: 'Bar',
+                value: 'bar',
+            },
+            {
+                label: 'Radial',
+                value: 'radial',
+            },
+            {
+                label: 'Donut',
+                value: 'donut',
+            },
+        ]
+
+        const unitOptions = ['Mio. t', 'Mio. t CO2', 'Mio. t CO2e']
+
         const strokeStyleOptions = [
             {
                 label: 'Durchgezogen',
@@ -316,30 +343,49 @@ export const useChartDataStore = defineStore(
             },
         ]
 
-        const createSeries = () => ({
-            name: '',
-            range: {
-                text: '',
-            },
-            data: [],
-            color: colorPalette[
-                Math.floor(Math.random() * colorPalette.length)
-            ],
-            style: strokeStyleOptions[0],
-            dataLabel: dataLabelOptions[0],
-            tooltip: {
-                show: true,
-                format: '',
-                precision: 0,
-            },
-            yAxis: {
-                separate: false,
-                position: 'left',
-                unit: '',
-                format: '',
-                precision: 0,
-            },
-        })
+        const createSeries = (templateSeries) => {
+            const data = {
+                id: Math.random().toString(36).slice(2, 9),
+                name: '',
+                range: {
+                    text: '',
+                    sheet: '',
+                },
+                data: [],
+                type: chartTypeOptions[0],
+                unit: '[Einheit]',
+                color: colorPalette[
+                    Math.floor(Math.random() * colorPalette.length)
+                ],
+                style: strokeStyleOptions[0],
+                dataLabel: dataLabelOptions[0],
+                tooltip: {
+                    show: true,
+                    format: '',
+                    precision: 0,
+                },
+                yAxis: {
+                    separate: false,
+                    position: 'left',
+                    format: '',
+                    precision: 0,
+                },
+            }
+
+            if (templateSeries) {
+                data.range.text = templateSeries.range.text
+                data.range.sheet = templateSeries.range.sheet
+
+                data.style = templateSeries.style
+                data.dataLabel = templateSeries.dataLabel
+
+                data.tooltip.show = templateSeries.tooltip.show
+                data.tooltip.format = templateSeries.tooltip.format
+                data.tooltip.precision = templateSeries.tooltip.precision
+            }
+
+            return data
+        }
 
         const seriesList = ref([])
         seriesList.value.push(createSeries())
@@ -347,18 +393,22 @@ export const useChartDataStore = defineStore(
         function convertSeries(series) {
             return {
                 name: series.name,
-                data: series.data.map((d) => d),
+                data: [...series.data], //series.data.map((d) => d),
                 type: 'line',
+                unit: series.unit,
                 color: series.color.hex,
                 style: series.style.value,
                 dataLabel: series.dataLabel.value,
                 tooltip: {
-                    show: series.tooltip.show,
+                    precision: series.tooltip.precision,
+                    //         show: series.tooltip.show,
+                    //         formatter: (v) => Math.round(v) + series.unit,
                 },
             }
         }
 
         const chartOptions = computed(() => {
+            console.log('update chartOptions')
             const opts = createDefaultOptions()
 
             opts.grid.show = grid.value.show
@@ -384,6 +434,19 @@ export const useChartDataStore = defineStore(
                 opts.xaxis.type = 'datetime'
             }
 
+            opts.tooltip.shared = true
+            opts.tooltip.y.formatter = function (y, { seriesIndex, w }) {
+                const config = w.config.series[seriesIndex]
+
+                if (typeof y !== 'undefined') {
+                    return (
+                        y.toFixed(config.tooltip.precision) +
+                        (config.unit && ' ' + config.unit)
+                    )
+                }
+                return y
+            }
+
             opts.chart.stacked = stacked.value
 
             return opts
@@ -391,6 +454,7 @@ export const useChartDataStore = defineStore(
 
         const chartSeries = computed(() => {
             const dataSeries = []
+            console.log('update chartSeries')
 
             for (const item of seriesList.value) {
                 if (!item.data.length) {
@@ -413,7 +477,6 @@ export const useChartDataStore = defineStore(
                     },
                 )
             }
-            console.log('update series', dataSeries)
 
             return dataSeries
         })
@@ -429,8 +492,13 @@ export const useChartDataStore = defineStore(
         })
 
         function addSeries() {
-            const series = createSeries()
+            const lastSeries =
+                seriesList.value.length &&
+                seriesList.value[seriesList.value.length - 1]
+
+            const series = createSeries(lastSeries)
             seriesList.value.push(series)
+
             return series
         }
 
@@ -459,6 +527,8 @@ export const useChartDataStore = defineStore(
             seriesList,
 
             // options
+            chartTypeOptions,
+            unitOptions,
             colorPalette,
             strokeStyleOptions,
             dataLabelOptions,

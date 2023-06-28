@@ -11,6 +11,7 @@ console.log('plugin', plugin)
 
 const sheetManager = useSheetManagerStore()
 onMounted(() => {
+    console.log('reset sheetManager')
     sheetManager.reset()
 })
 

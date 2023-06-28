@@ -44,7 +44,10 @@ export const useSheetManagerStore = defineStore(
         }
 
         function fetchWrapper(path, options) {
-            return fetch(
+            const controller = new AbortController()
+            const signal = controller.signal
+
+            const fetchPromise = fetch(
                 `${baseURL}${path}?${new URLSearchParams({
                     access_token: token,
                     ...options.query,
@@ -55,6 +58,7 @@ export const useSheetManagerStore = defineStore(
                     },
                     mode: 'cors',
                     ...options,
+                    signal,
                 },
             )
                 .then((response) => {
@@ -71,6 +75,10 @@ export const useSheetManagerStore = defineStore(
                     console.error(error)
                     throw error
                 })
+
+            fetchPromise.abort = () => controller.abort()
+
+            return fetchPromise
         }
 
         function getCommunityFolder(name) {
@@ -112,6 +120,7 @@ export const useSheetManagerStore = defineStore(
         }
 
         function getSheetNames(sheetId) {
+            console.log('GET SHEET NAMES', sheetId)
             return fetchWrapper('/sheet-names', {
                 query: { id: sheetId },
             })
@@ -124,6 +133,7 @@ export const useSheetManagerStore = defineStore(
         }
 
         async function reset() {
+            console.log('sheet-manager: reset')
             await getCommunityFolder(communitySlug.value)
             await getTemplates()
         }

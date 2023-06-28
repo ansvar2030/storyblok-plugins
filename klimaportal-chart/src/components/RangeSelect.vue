@@ -5,7 +5,8 @@
         <div class="input-row">
             <q-select
                 class="sheet-name"
-                v-model="inputSheetName"
+                :modelValue="inputSheetName"
+                @update:model-value="updateSheet"
                 :options="sheetManager.sheetNames"
                 emit-value
                 dense
@@ -19,6 +20,7 @@
                 dense
                 no-error-icon
                 :rules="[validateRange]"
+                @blur="updateRange"
                 ><template v-slot:append>
                     <q-btn
                         icon="wysiwyg"
@@ -59,14 +61,14 @@
 import { useSheetManagerStore } from '@/stores/sheet-manager'
 
 export default {
-    emits: ['update:range', 'update:data'],
+    emits: ['update:range-details', 'update:data'],
 
     props: {
         label: {
             type: String,
             default: 'Bereich auswählen',
         },
-        sheetName: {
+        sheet: {
             type: String,
             default: '',
         },
@@ -90,11 +92,12 @@ export default {
     data() {
         return {
             inputRangeRaw: this.range,
-            inputSheetName: this.sheetName,
+            inputSheetName: this.sheet,
 
             nextRange: '',
             loadedRange: '',
             loading: false,
+            loadRangeDataPromise: null,
             data: [],
 
             dialogDataPreview: {
@@ -245,6 +248,12 @@ export default {
         },
     },
 
+    beforeUnmount() {
+        if (this.loadRangeDataPromise) {
+            this.loadRangeDataPromise.abort()
+        }
+    },
+
     methods: {
         validateRange(value) {
             if (
@@ -257,7 +266,15 @@ export default {
             return true
         },
 
+        updateRange() {
+            if (!this.isRangeValid) {
+                return
+            }
+            this.loadRangeData(this.fullRange)
+        },
+
         loadRangeData(range, force = false) {
+            console.log('loadRangeData', range, force, this.loadedRange)
             if (!range || (!force && this.loadedRange === range)) {
                 return
             }
@@ -270,23 +287,35 @@ export default {
             this.loadedRange = range
             this.loading = true
 
-            this.sheetManager
-                .getSheetData(this.sheetManager.sheetId, range)
-                .then((data) => {
-                    this.data = data
-                })
-                .catch((error) => {
-                    this.data = []
-                    console.error(error)
-                })
-                .then(() => {
-                    this.loading = false
+            new Promise((resolve) => {
+                console.log('waiting...')
+                setTimeout(resolve, 5000)
+            }).then(() => {
+                console.log('loading...')
+                this.loadRangeDataPromise = this.sheetManager
+                    .getSheetData(this.sheetManager.sheetId, range)
+                    .then((data) => {
+                        this.data = data
+                    })
+                    .catch((error) => {
+                        this.data = []
+                        console.error(error)
+                    })
+                    .then(() => {
+                        this.loading = false
+                        this.loadRangeDataPromise = null
 
-                    if (this.nextRange) {
-                        this.loadRangeData(this.nextRange)
-                        this.nextRange = ''
-                    }
-                })
+                        if (this.nextRange) {
+                            const { nextRange } = this
+                            this.nextRange = ''
+                            this.loadRangeData(nextRange)
+                        }
+                    })
+            })
+        },
+
+        updateSheet(val) {
+            this.inputSheetName = val
         },
 
         reloadData() {
@@ -297,37 +326,67 @@ export default {
     },
 
     watch: {
-        fullRange: {
+        range(value) {
+            this.inputRangeRaw = value
+        },
+
+        sheet: {
             handler(value) {
-                if (value) {
-                    this.loadRangeData(value)
+                if (!value) {
+                    this.inputSheetName = ''
+                    return
+                }
+
+                if (this.sheetManager.sheetNames.includes(value)) {
+                    this.inputSheetName = value
+                } else {
+                    this.inputSheetName = ''
                 }
             },
+            immediate: true,
         },
+
+        // fullRange: {
+        //     handler(value) {
+        //         if (value) {
+        //             this.loadRangeData(value)
+        //         }
+        //     },
+        // },
 
         processedRange: {
             handler(value) {
-                this.$emit('update:range', value)
+                this.$emit('update:range-details', value)
             },
         },
 
         transformedData: {
             handler(value) {
-                console.log('transformedData', value)
                 this.$emit('update:data', value)
             },
         },
 
-        'sheetManager.sheetNames': {
-            handler() {
-                if (this.$props.sheetName) {
-                    this.inputSheetName = this.$props.sheetName
-                } else {
-                    this.inputSheetName = this.sheetManager.sheetNames[0] || ''
-                }
-            },
-            immediate: true,
-        },
+        // 'sheetManager.sheetNames': {
+        //     handler() {
+        //         console.log(
+        //             'sheetNames',
+        //             1,
+        //             this.$props.sheet,
+        //             2,
+        //             this.inputSheetName,
+        //         )
+        //         if (
+        //             this.$props.sheet &&
+        //             this.inputSheetName !== this.$props.sheet &&
+        //             this.sheetManager.sheetNames.includes(this.$props.sheet)
+        //         ) {
+        //             this.inputSheetName = this.$props.sheet
+        //         } else {
+        //             this.inputSheetName = ''
+        //         }
+        //     },
+        //     immediate: true,
+        // },
     },
 }
 </script>

@@ -2,6 +2,8 @@
     <div class="series-list">
         <q-list bordered>
             <q-expansion-item
+                v-for="(item, index) of seriesList"
+                :key="item.id"
                 group="group"
                 icon="dataset_linked"
                 :header-style="{ color: item?.color?.hex }"
@@ -11,8 +13,6 @@
                     (value) => (value ? (openedIndex = index) : true)
                 "
                 class="series-item"
-                v-for="(item, index) of seriesList"
-                :key="item.name"
             >
                 <div class="settings">
                     <div class="row">
@@ -26,13 +26,31 @@
                         </div>
 
                         <div class="option">
+                            <!-- :ref="(el) => setRangeRef(item.id, el)" -->
                             <RangeSelect
-                                ref="Datenreferenz"
+                                :key="item.id"
+                                :sheet="item.range.sheet"
+                                :range="item.range.text"
                                 label="Datenbereich"
-                                :model-value="item.range.text"
-                                @update:range="(val) => (item.range = val)"
+                                @update:range-details="
+                                    (val) => (item.range = val)
+                                "
                                 @update:data="(val) => (item.data = val)"
                                 hint="Gib den Bereich aus deinem GoogleSheet für diesen Datensatz an."
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="option">
+                            <q-select
+                                label="Einheit"
+                                :model-value="item.unit"
+                                use-input
+                                hide-selected
+                                fill-input
+                                :options="chartData.unitOptions"
+                                @input-value="(value) => (item.unit = value)"
                             />
                         </div>
                     </div>
@@ -182,6 +200,8 @@ export default {
         return {
             openedIndex: 0,
             dialogRemoveSeries: { show: false, item: undefined },
+
+            rangeRefs: {},
         }
     },
 
@@ -201,6 +221,14 @@ export default {
                 this.openedIndex--
             } else {
                 this.openedIndex = 0
+            }
+        },
+
+        setRangeRef(id, el) {
+            if (el) {
+                this.rangeRefs[id] = el
+            } else {
+                delete this.rangeRefs[id]
             }
         },
     },
