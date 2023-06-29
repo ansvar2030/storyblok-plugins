@@ -50,11 +50,11 @@ const tab = ref('setup')
                 icon="table_chart"
                 label="Daten"
             />
-            <q-tab
+            <!-- <q-tab
                 name="extras"
                 icon="settings_suggest"
                 label="Extras"
-            />
+            /> -->
         </q-tabs>
         <q-separator />
 

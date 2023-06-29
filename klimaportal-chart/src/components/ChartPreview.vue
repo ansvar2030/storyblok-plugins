@@ -85,7 +85,7 @@
 
 <script>
 import { mapState } from 'pinia'
-import { useChartDataStore } from '@/stores/chart-data'
+import { useChartDataStore } from '@/stores/chart'
 
 export default {
     props: {

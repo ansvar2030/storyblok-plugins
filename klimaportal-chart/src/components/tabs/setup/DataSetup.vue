@@ -165,7 +165,7 @@
 <script>
 import { mapState } from 'pinia'
 import { useSheetManagerStore } from '@/stores/sheet-manager'
-import { useChartDataStore } from '@/stores/chart-data'
+import { useChartDataStore } from '@/stores/chart'
 import RangeSelect from '@/components/RangeSelect.vue'
 
 export default {

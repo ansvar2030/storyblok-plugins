@@ -315,12 +315,75 @@ export const useChartDataStore = defineStore(
 
         const strokeStyleOptions = [
             {
-                label: 'Durchgezogen',
-                value: 'solid',
+                label: 'durchgezogen',
+                value: 'solid-straight',
+                settings: {
+                    dashArray: 0,
+                    curve: 'straight',
+                    width: 2,
+                },
             },
             {
-                label: 'Gestrichelt',
-                value: 'dashed',
+                label: 'durchgezogen & geglättet',
+                value: 'solid-smooth',
+                settings: {
+                    dashArray: 0,
+                    curve: 'smooth',
+                    width: 2,
+                },
+            },
+            {
+                label: 'gestrichelt',
+                value: 'dashed-straight',
+                settings: {
+                    dashArray: 5,
+                    curve: 'straight',
+                    width: 2,
+                },
+            },
+            {
+                label: 'gestrichelt & geglättet',
+                value: 'dashed-smooth',
+                settings: {
+                    dashArray: 5,
+                    curve: 'smooth',
+                    width: 2,
+                },
+            },
+        ]
+
+        const fillStyleOptions = [
+            {
+                label: '0% transparent',
+                value: 'opacity-100',
+                settings: {
+                    opacity: 1,
+                    type: 'solid',
+                },
+            },
+            {
+                label: '25% transparent',
+                value: 'opacity-75',
+                settings: {
+                    opacity: 0.75,
+                    type: 'solid',
+                },
+            },
+            {
+                label: '50% transparent',
+                value: 'opacity-50',
+                settings: {
+                    opacity: 0.5,
+                    type: 'solid',
+                },
+            },
+            {
+                label: '75% transparent',
+                value: 'opacity-25',
+                settings: {
+                    opacity: 0.25,
+                    type: 'solid',
+                },
             },
         ]
 
@@ -357,7 +420,10 @@ export const useChartDataStore = defineStore(
                 color: colorPalette[
                     Math.floor(Math.random() * colorPalette.length)
                 ],
-                style: strokeStyleOptions[0],
+                style: {
+                    stroke: strokeStyleOptions[0],
+                    fill: fillStyleOptions[0],
+                },
                 dataLabel: dataLabelOptions[0],
                 tooltip: {
                     show: true,
@@ -376,7 +442,8 @@ export const useChartDataStore = defineStore(
                 data.range.text = templateSeries.range.text
                 data.range.sheet = templateSeries.range.sheet
 
-                data.style = templateSeries.style
+                data.style.stroke = templateSeries.style.stroke
+                data.style.fill = templateSeries.style.fill
                 data.dataLabel = templateSeries.dataLabel
 
                 data.tooltip.show = templateSeries.tooltip.show
@@ -389,23 +456,26 @@ export const useChartDataStore = defineStore(
 
         const seriesList = ref([])
         seriesList.value.push(createSeries())
+        const filteredSeriesList = computed(() =>
+            seriesList.value.filter((item) => item.data.length > 0),
+        )
 
-        function convertSeries(series) {
-            return {
-                name: series.name,
-                data: [...series.data], //series.data.map((d) => d),
-                type: 'line',
-                unit: series.unit,
-                color: series.color.hex,
-                style: series.style.value,
-                dataLabel: series.dataLabel.value,
-                tooltip: {
-                    precision: series.tooltip.precision,
-                    //         show: series.tooltip.show,
-                    //         formatter: (v) => Math.round(v) + series.unit,
-                },
-            }
-        }
+        // function convertSeries(series) {
+        //     return {
+        //         name: series.name + ' ' + series.unit,
+        //         data: [...series.data], //series.data.map((d) => d),
+        //         type: 'line',
+        //         // unit: series.unit,
+        //         color: series.color.hex,
+        //         // style: series.style.value,
+        //         // dataLabel: series.dataLabel.value,
+        //         // tooltip: {
+        //         //     precision: series.tooltip.precision,
+        //         //     //         show: series.tooltip.show,
+        //         //     //         formatter: (v) => Math.round(v) + series.unit,
+        //         // },
+        //     }
+        // }
 
         const chartOptions = computed(() => {
             console.log('update chartOptions')
@@ -436,18 +506,65 @@ export const useChartDataStore = defineStore(
 
             opts.tooltip.shared = true
             opts.tooltip.y.formatter = function (y, { seriesIndex, w }) {
-                const config = w.config.series[seriesIndex]
+                const config = w.config.customData[seriesIndex]
 
-                if (typeof y !== 'undefined') {
-                    return (
-                        y.toFixed(config.tooltip.precision) +
-                        (config.unit && ' ' + config.unit)
-                    )
-                }
-                return y
+                return isNaN(y)
+                    ? ''
+                    : y.toFixed(config.tooltip.precision) +
+                          (config.unit && ' ' + config.unit)
             }
 
             opts.chart.stacked = stacked.value
+
+            opts.stroke = {
+                width: 2,
+                dashArray: [],
+                curve: [],
+            }
+
+            opts.fill = {
+                opacity: [],
+                type: [],
+            }
+
+            opts.dataLabels = {
+                enabled: true,
+                enabledOnSeries: [],
+                formatter: (val, { seriesIndex, w }) => {
+                    // const config = w.config.customData[seriesIndex]
+                    return isNaN(val) ? '' : val.toFixed(0)
+                },
+            }
+
+            filteredSeriesList.value.forEach((item, index) => {
+                opts.stroke.dashArray.push(
+                    item.style.stroke?.settings?.dashArray,
+                )
+                opts.stroke.curve.push(item.style.stroke?.settings?.curve)
+
+                opts.fill.opacity.push(item.style.fill?.settings?.opacity)
+                opts.fill.type.push(item.style.fill?.settings?.type)
+
+                if (item.dataLabel) {
+                    opts.dataLabels.enabledOnSeries.push(index)
+                }
+            })
+
+            opts.customData = []
+            for (const item of filteredSeriesList.value) {
+                opts.customData.push({
+                    name: item.name,
+                    unit: item.unit,
+                    color: item.color.hex,
+                    style: item.style.value,
+                    dataLabel: item.dataLabel.value,
+                    tooltip: {
+                        precision: item.tooltip.precision,
+                        //     //         show: series.tooltip.show,
+                        //     //         formatter: (v) => Math.round(v) + series.unit,
+                    },
+                })
+            }
 
             return opts
         })
@@ -456,11 +573,13 @@ export const useChartDataStore = defineStore(
             const dataSeries = []
             console.log('update chartSeries')
 
-            for (const item of seriesList.value) {
-                if (!item.data.length) {
-                    continue
-                }
-                dataSeries.push(convertSeries(item))
+            for (const item of filteredSeriesList.value) {
+                dataSeries.push({
+                    name: item.name,
+                    data: [...item.data],
+                    type: item.type.value,
+                    color: item.color.hex,
+                })
             }
 
             if (!dataSeries.length) {
@@ -531,6 +650,7 @@ export const useChartDataStore = defineStore(
             unitOptions,
             colorPalette,
             strokeStyleOptions,
+            fillStyleOptions,
             dataLabelOptions,
 
             // methods

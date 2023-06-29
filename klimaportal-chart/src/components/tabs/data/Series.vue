@@ -50,7 +50,15 @@
                                 hide-selected
                                 fill-input
                                 :options="chartData.unitOptions"
-                                @input-value="(value) => (item.unit = value)"
+                                @blur="(ev) => (item.unit = ev.target.value)"
+                            />
+                        </div>
+
+                        <div class="option">
+                            <q-select
+                                v-model="item.type"
+                                :options="chartData.seriesTypeOptions"
+                                label="Typ"
                             />
                         </div>
                     </div>
@@ -107,17 +115,25 @@
                         </div>
                         <div class="option">
                             <q-select
-                                v-model="item.style"
+                                v-model="item.style.stroke"
                                 :options="chartData.strokeStyleOptions"
-                                label="Stil"
+                                label="Strich-Stil"
                             ></q-select>
                         </div>
                         <div class="option">
                             <q-select
-                                v-model="item.dataLabel"
-                                :options="chartData.dataLabelOptions"
-                                label="Datenbeschriftung"
+                                v-model="item.style.fill"
+                                :options="chartData.fillStyleOptions"
+                                label="Flächen-Stil"
                             ></q-select>
+                        </div>
+                        <div class="option">
+                            <q-field
+                                label="Datenbeschriftung"
+                                borderless
+                            >
+                                <q-toggle v-model="item.dataLabel" />
+                            </q-field>
                         </div>
                     </div>
 
@@ -178,8 +194,15 @@
 
 <script>
 import { mapState } from 'pinia'
-import { useChartDataStore } from '@/stores/chart-data'
+import { useChartDataStore } from '@/stores/chart'
 import RangeSelect from '@/components/RangeSelect.vue'
+import {
+    colorPalette,
+    seriesTypeOptions,
+    unitOptions,
+    strokeStyleOptions,
+    fillStyleOptions,
+} from '@/stores/chart/options'
 
 export default {
     inject: ['filters'],
@@ -193,6 +216,12 @@ export default {
 
         return {
             chartData,
+            // options
+            colorPalette,
+            seriesTypeOptions,
+            unitOptions,
+            strokeStyleOptions,
+            fillStyleOptions,
         }
     },
 

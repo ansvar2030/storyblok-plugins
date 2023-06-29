@@ -131,7 +131,7 @@
 </template>
 
 <script>
-import { useChartDataStore } from '@/stores/chart-data'
+import { useChartDataStore } from '@/stores/chart'
 import ChartPreview from '@/components/ChartPreview.vue'
 
 export default {

@@ -1,7 +1,8 @@
 <script>
-import { useChartDataStore } from '@/stores/chart-data'
+import { useChartDataStore } from '@/stores/chart'
 import ChartPreview from '@/components/ChartPreview.vue'
 import Series from './Series.vue'
+import { stackedOptions } from '@/stores/chart/options'
 
 export default {
     components: {
@@ -14,6 +15,7 @@ export default {
 
         return {
             chartData,
+            stackedOptions,
         }
     },
 
@@ -47,15 +49,20 @@ export default {
             </div>
 
             <div class="row">
-                <q-toggle
+                <q-select
                     v-model="chartData.stacked"
+                    :options="stackedOptions"
+                    emit-value
+                    map-options
                     label="Stacking"
+                    hint="Mehrere Datensätze können aufeinander gestapelt statt unter
+                    übereinander angezeigt werden."
                 />
 
-                <span class="hint">
+                <!-- <span class="hint">
                     Mehrere Datensätze können aufeinander gestapelt statt unter
                     übereinander angezeigt werden.
-                </span>
+                </span> -->
             </div>
         </div>
 
@@ -93,7 +100,8 @@ header {
         margin-bottom: 1rem;
     }
 
-    .q-btn {
+    .q-btn,
+    .q-select {
         width: 100%;
         margin-bottom: 0.5rem;
     }

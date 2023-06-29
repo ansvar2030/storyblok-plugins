@@ -35,6 +35,7 @@ const presetList = [
                 v-for="preset of presetList"
                 color="grey"
                 outline
+                @click="chartData.setPreset(preset)"
             >
                 <img
                     :src="`/chart-presets/${preset}.svg`"
