@@ -49,7 +49,7 @@
                                 use-input
                                 hide-selected
                                 fill-input
-                                :options="chartData.unitOptions"
+                                :options="unitOptions"
                                 @blur="(ev) => (item.unit = ev.target.value)"
                             />
                         </div>
@@ -57,7 +57,9 @@
                         <div class="option">
                             <q-select
                                 v-model="item.type"
-                                :options="chartData.seriesTypeOptions"
+                                :options="seriesTypeOptions"
+                                emit-value
+                                map-options
                                 label="Typ"
                             />
                         </div>
@@ -67,7 +69,7 @@
                         <div class="option">
                             <q-select
                                 v-model="item.color"
-                                :options="chartData.colorPalette"
+                                :options="colorPalette"
                                 label="Farbe"
                             >
                                 <template v-slot:selected>
@@ -116,14 +118,14 @@
                         <div class="option">
                             <q-select
                                 v-model="item.style.stroke"
-                                :options="chartData.strokeStyleOptions"
+                                :options="strokeStyleOptions"
                                 label="Strich-Stil"
                             ></q-select>
                         </div>
                         <div class="option">
                             <q-select
                                 v-model="item.style.fill"
-                                :options="chartData.fillStyleOptions"
+                                :options="fillStyleOptions"
                                 label="Flächen-Stil"
                             ></q-select>
                         </div>

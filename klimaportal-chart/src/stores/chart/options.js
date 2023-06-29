@@ -1,13 +1,75 @@
+export const stackedOptions = [
+    {
+        label: 'Aus',
+        value: 'off',
+    },
+    {
+        label: 'Normal',
+        value: 'normal',
+    },
+    {
+        label: '100%',
+        value: '100%',
+    },
+]
+
 export const presetOptions = [
-    'bar',
-    'area',
-    'line',
-    'radial',
-    'bar-stacked',
-    'area-stacked',
-    'line-stacked',
-    'donut',
-    'bar-line',
+    {
+        label: 'bar',
+        value: 'bar',
+        type: 'bar',
+        stacked: false,
+    },
+    {
+        label: 'area',
+        value: 'area',
+        type: 'area',
+        stacked: false,
+    },
+    {
+        label: 'line',
+        value: 'line',
+        type: 'line',
+        stacked: false,
+    },
+    {
+        label: 'bar-stacked',
+        value: 'bar-stacked',
+        type: 'bar',
+        stacked: stackedOptions[1].value,
+    },
+    {
+        label: 'area-stacked',
+        value: 'area-stacked',
+        type: 'area',
+        stacked: stackedOptions[1].value,
+    },
+    {
+        label: 'line-stacked',
+        value: 'line-stacked',
+        type: 'line',
+        stacked: stackedOptions[1].value,
+    },
+    {
+        label: 'radial',
+        value: 'radial',
+        type: 'radialBar',
+        stacked: false,
+        singleSeries: true,
+    },
+    {
+        label: 'donut',
+        value: 'donut',
+        type: 'donut',
+        stacked: false,
+        singleSeries: true,
+    },
+    {
+        label: 'bar-line',
+        value: 'bar-line',
+        type: 'bar',
+        stacked: false,
+    },
 ]
 
 export const colorPalette = [
@@ -130,21 +192,6 @@ export const colorPalette = [
     {
         key: 'pink.900',
         hex: '#d90e83',
-    },
-]
-
-export const stackedOptions = [
-    {
-        label: 'Aus',
-        value: 'off',
-    },
-    {
-        label: 'Normal',
-        value: 'normal',
-    },
-    {
-        label: '100%',
-        value: '100%',
     },
 ]
 

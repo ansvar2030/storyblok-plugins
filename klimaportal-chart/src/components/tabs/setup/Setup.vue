@@ -1,18 +1,24 @@
-<script setup lang="ts">
+<script lang="ts">
 import ChartSettings from './ChartSettings.vue'
 import DataSetup from './DataSetup.vue'
+import { presetOptions } from '@/stores/chart/options'
+import { useChartDataStore } from '@/stores/chart'
 
-const presetList = [
-    'bar',
-    'area',
-    'line',
-    'radial',
-    'bar-stacked',
-    'area-stacked',
-    'line-stacked',
-    'donut',
-    'bar-line',
-]
+export default {
+    components: {
+        ChartSettings,
+        DataSetup,
+    },
+
+    setup() {
+        const chartData = useChartDataStore()
+
+        return {
+            chartData,
+            presetOptions,
+        }
+    },
+}
 </script>
 
 <template>
@@ -32,13 +38,13 @@ const presetList = [
         /> -->
         <div class="presets">
             <q-btn
-                v-for="preset of presetList"
+                v-for="preset of presetOptions"
                 color="grey"
                 outline
                 @click="chartData.setPreset(preset)"
             >
                 <img
-                    :src="`/chart-presets/${preset}.svg`"
+                    :src="`/chart-presets/${preset.value}.svg`"
                     alt=""
                     width="111"
                     height="106"

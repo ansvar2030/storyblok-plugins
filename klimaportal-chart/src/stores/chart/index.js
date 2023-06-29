@@ -95,6 +95,10 @@ export const useChartDataStore = defineStore(
         const type = ref('')
         type.value = chartTypeOptions[0].value
 
+        const isSingleSeriesType = computed(() =>
+            ['radialBar', 'donut'].includes(type.value),
+        )
+
         const stacked = ref('')
         stacked.value = stackedOptions[0].value
 
@@ -188,7 +192,7 @@ export const useChartDataStore = defineStore(
                     sheet: '',
                 },
                 data: [],
-                type: seriesTypeOptions[0],
+                type: seriesTypeOptions[0].value,
                 unit: '[Einheit]',
                 color: colorPalette[
                     Math.floor(Math.random() * colorPalette.length)
@@ -229,9 +233,14 @@ export const useChartDataStore = defineStore(
 
         const seriesList = ref([])
         seriesList.value.push(createSeries())
-        const filteredSeriesList = computed(() =>
-            seriesList.value.filter((item) => item.data.length > 0),
-        )
+        const filteredSeriesList = computed(() => {
+            const list = seriesList.value.filter((item) => item.data.length > 0)
+
+            if (isSingleSeriesType.value) {
+                return list.slice(0, 1)
+            }
+            return list
+        })
 
         // function convertSeries(series) {
         //     return {
@@ -279,12 +288,12 @@ export const useChartDataStore = defineStore(
 
             opts.tooltip.shared = true
             opts.tooltip.y.formatter = function (y, { seriesIndex, w }) {
-                const config = w.config.customData[seriesIndex]
+                const config = w?.config?.customData[seriesIndex] || {}
 
                 return isNaN(y)
                     ? ''
-                    : y.toFixed(config.tooltip.precision) +
-                          (config.unit && ' ' + config.unit)
+                    : y.toFixed(config?.tooltip?.precision) +
+                          (config?.unit && ' ' + config?.unit)
             }
 
             opts.chart.stacked = stacked.value !== 'off'
@@ -347,36 +356,34 @@ export const useChartDataStore = defineStore(
             const dataSeries = []
             console.log('update chartSeries')
 
-            for (const item of filteredSeriesList.value) {
-                // const settings = {
-                //     name: item.name,
-                //     data: [...item.data],
-                //     type: item.type.value || undefined,
-                //     color: item.color.hex,
-                // }
+            if (isSingleSeriesType.value) {
+                if (filteredSeriesList.value.length === 0) {
+                    dataSeries.push(...dummyData.estEmissions)
+                } else {
+                    dataSeries.push(...filteredSeriesList.value[0].data)
+                }
+            } else {
+                for (const item of filteredSeriesList.value) {
+                    dataSeries.push({
+                        name: item.name,
+                        data: [...item.data],
+                        type: item.type === 'default' ? type.value : item.type,
+                        color: item.color.hex,
+                    })
+                }
 
-                dataSeries.push({
-                    name: item.name,
-                    data: [...item.data],
-                    type:
-                        item.type.value === 'default'
-                            ? type.value
-                            : item.type.value,
-                    color: item.color.hex,
-                })
-            }
-
-            if (!dataSeries.length) {
-                dataSeries.push(
-                    {
-                        name: 'Emissionen',
-                        data: dummyData.estEmissions,
-                    },
-                    {
-                        name: '1,5°C Pfad ',
-                        data: dummyData.onePoint5Path,
-                    },
-                )
+                if (!dataSeries.length) {
+                    dataSeries.push(
+                        {
+                            name: 'Emissionen',
+                            data: dummyData.estEmissions,
+                        },
+                        {
+                            name: '1,5°C Pfad ',
+                            data: dummyData.onePoint5Path,
+                        },
+                    )
+                }
             }
 
             return dataSeries
@@ -411,7 +418,25 @@ export const useChartDataStore = defineStore(
             }
         }
 
-        function setPreset(preset) {}
+        function setPreset(preset) {
+            type.value = preset.type
+            // change all series type to default
+            seriesList.value.forEach((item) => {
+                item.type = 'default'
+            })
+
+            if (preset.stacked) {
+                stacked.value = preset.stacked
+            } else {
+                stacked.value = stackedOptions[0].value
+            }
+
+            if (preset.value === 'bar-line') {
+                seriesList.value.slice(1).forEach((item) => {
+                    item.type = 'line'
+                })
+            }
+        }
 
         function reloadData() {
             console.log('reloadData')
@@ -430,19 +455,11 @@ export const useChartDataStore = defineStore(
             type,
             seriesList,
 
-            // options
-            // chartTypeOptions,
-            // stackedOptions,
-            // seriesTypeOptions,
-            // unitOptions,
-            // colorPalette,
-            // strokeStyleOptions,
-            // fillStyleOptions,
-
             // methods
             addSeries,
             removeSeries,
             reloadData,
+            setPreset,
 
             // output
             transformedData,
