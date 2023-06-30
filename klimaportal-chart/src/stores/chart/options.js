@@ -50,20 +50,20 @@ export const presetOptions = [
         type: 'line',
         stacked: stackedOptions[1].value,
     },
-    {
-        label: 'radial',
-        value: 'radial',
-        type: 'radialBar',
-        stacked: false,
-        singleSeries: true,
-    },
-    {
-        label: 'donut',
-        value: 'donut',
-        type: 'donut',
-        stacked: false,
-        singleSeries: true,
-    },
+    // {
+    //     label: 'radial',
+    //     value: 'radial',
+    //     type: 'radialBar',
+    //     stacked: false,
+    //     singleSeries: true,
+    // },
+    // {
+    //     label: 'donut',
+    //     value: 'donut',
+    //     type: 'donut',
+    //     stacked: false,
+    //     singleSeries: true,
+    // },
     {
         label: 'bar-line',
         value: 'bar-line',
@@ -331,3 +331,187 @@ export const dataLabelOptions = [
         value: 'bottom-offset',
     },
 ]
+
+export const widthOptions = [
+    { value: 'single', label: 'Einfache Breite' },
+    { value: 'double', label: 'Doppelte Breite' },
+]
+
+export const gridOptions = [
+    {
+        value: 'horizontal',
+        label: 'Horizontal',
+    },
+    {
+        value: 'vertical',
+        label: 'Vertikal',
+    },
+    {
+        value: 'both',
+        label: 'Beides',
+    },
+]
+
+export const dateFormats = ['YYYY', 'MM.YYYY', 'DD.MM.YYYY']
+export const dataTypeOptions = [
+    {
+        value: 'auto',
+        label: 'Auto',
+    },
+    {
+        value: 'date',
+        label: 'Datum',
+    },
+]
+
+export function createChartDefaultOptions() {
+    return {
+        chart: {
+            type: 'line',
+            zoom: {
+                enabled: false,
+            },
+            toolbar: {
+                show: false,
+            },
+            height: 272,
+            // defaultLocale: 'de',
+            fontFamily: 'Satoshi, sans-serif',
+        },
+        xaxis: {
+            type: 'datetime',
+            lines: {
+                show: true,
+            },
+            labels: {
+                rotate: 0,
+                rotateAlways: true,
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 500,
+                },
+            },
+        },
+        yaxis: [
+            {
+                lines: {
+                    show: false,
+                },
+                labels: {
+                    formatter: function (value) {
+                        return Math.round(value)
+                    },
+                    style: {
+                        fontSize: '12px',
+                        fontWeight: 500,
+                    },
+                },
+            },
+        ],
+        colors: ['#000', '#999'],
+        stroke: {
+            width: 2,
+            dashArray: [0, 5],
+        },
+        grid: {
+            show: true,
+
+            xaxis: {
+                lines: {
+                    show: true,
+                },
+            },
+
+            yaxis: {
+                lines: {
+                    show: false,
+                },
+            },
+        },
+        fill: {
+            type: 'solid',
+            opacity: [1, 0.25],
+        },
+        // markers: {
+        //     size: 8,
+        //     shape: 'rect',
+        //     radius: 0,
+        //     fillOpacity: 1,
+        //     strokeColors: '#fff',
+        //     strokeWidth: 2,
+        //     strokeOpacity: 1,
+        //     strokeDashArray: 0,
+        //     hover: {
+        //         size: 8,
+        //     },
+        // },
+        legend: {
+            horizontalAlign: 'left',
+            // offsetY: 10,
+            // offsetX: 0,
+            fontSize: '14px',
+            fontWeight: 700,
+            markers: {
+                width: 10,
+                height: 10,
+                radius: 0,
+                strokeWidth: '1px',
+                strokeColor: '#000',
+                offsetX: -3,
+            },
+            itemMargin: {
+                horizontal: 10,
+            },
+        },
+        tooltip: {
+            enabled: true,
+            shared: true,
+            intersect: false,
+            style: {
+                fontSize: '14px',
+            },
+            x: {
+                show: false,
+                // formatter: (v) => new Date(v).getFullYear(),
+            },
+            y: {
+                formatter: (v) => Math.round(v) + ' Mio. t',
+                title: {
+                    formatter: (seriesName) => seriesName,
+                },
+            },
+            custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                const list = series
+                    .map((s, index) => {
+                        const config = w?.config?.customData[index] || {}
+
+                        if (s[dataPointIndex] === undefined) return false
+
+                        return {
+                            name: config?.name,
+                            color: config?.color,
+                            value: s[dataPointIndex].toFixed(
+                                config?.tooltip?.precision,
+                            ),
+                            unit: config?.unit,
+                        }
+                    })
+                    .filter(Boolean)
+
+                return (
+                    '<ul>' +
+                    '<li>' +
+                    list
+                        .map(
+                            (item) =>
+                                `<span class="marker" style="color:${item.color};"></span>
+                                <span class="name">${item.name}</span>: <span class="value">${item.value} ${item.unit}</span>`,
+                        )
+                        .join('</li><li>') +
+                    '</li>' +
+                    '</ul>'
+                )
+            },
+        },
+    }
+}

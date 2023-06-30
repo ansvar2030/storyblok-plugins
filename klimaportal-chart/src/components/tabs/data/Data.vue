@@ -33,7 +33,7 @@ export default {
         </header> -->
 
         <div class="chart-column">
-            <chart-preview />
+            <chart-preview :refresh-button="true" />
 
             <div class="row">
                 <q-btn
@@ -41,6 +41,7 @@ export default {
                     label="Daten neu laden"
                     icon="refresh"
                     @click="chartData.reloadData"
+                    :loading="chartData.loading"
                 />
                 <span class="hint">
                     Hier kannst die Ansicht aktualisieren, wenn du in

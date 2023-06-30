@@ -180,18 +180,10 @@ export default {
         },
 
         transformedData() {
-            if (!this.data || !this.data.length) {
-                return []
-            }
-
-            let series = []
-            if (this.processedRange.direction === 'vertical') {
-                series = this.data.map((row) => row[0])
-            } else {
-                series = this.data[0]
-            }
-
-            return series.filter(Boolean)
+            return this.sheetManager.transformSheetData(
+                this.data,
+                this.processedRange.direction,
+            )
         },
 
         previewTable() {
@@ -287,31 +279,31 @@ export default {
             this.loadedRange = range
             this.loading = true
 
-            new Promise((resolve) => {
-                console.log('waiting...')
-                setTimeout(resolve, 5000)
-            }).then(() => {
-                console.log('loading...')
-                this.loadRangeDataPromise = this.sheetManager
-                    .getSheetData(this.sheetManager.sheetId, range)
-                    .then((data) => {
-                        this.data = data
-                    })
-                    .catch((error) => {
-                        this.data = []
-                        console.error(error)
-                    })
-                    .then(() => {
-                        this.loading = false
-                        this.loadRangeDataPromise = null
+            // new Promise((resolve) => {
+            //     console.log('waiting...')
+            //     setTimeout(resolve, 5000)
+            // }).then(() => {
+            //     console.log('loading...')
+            this.loadRangeDataPromise = this.sheetManager
+                .getSheetData(this.sheetManager.sheetId, range)
+                .then((data) => {
+                    this.data = data
+                })
+                .catch((error) => {
+                    this.data = []
+                    console.error(error)
+                })
+                .then(() => {
+                    this.loading = false
+                    this.loadRangeDataPromise = null
 
-                        if (this.nextRange) {
-                            const { nextRange } = this
-                            this.nextRange = ''
-                            this.loadRangeData(nextRange)
-                        }
-                    })
-            })
+                    if (this.nextRange) {
+                        const { nextRange } = this
+                        this.nextRange = ''
+                        this.loadRangeData(nextRange)
+                    }
+                })
+            // })
         },
 
         updateSheet(val) {

@@ -5,7 +5,7 @@
                 v-for="(item, index) of seriesList"
                 :key="item.id"
                 group="group"
-                icon="dataset_linked"
+                :icon="item.show ? 'dataset_linked' : 'visibility_off'"
                 :header-style="{ color: item?.color?.hex }"
                 :label="item.name || 'Neuer Datensatz'"
                 :model-value="index === openedIndex"
@@ -26,7 +26,6 @@
                         </div>
 
                         <div class="option">
-                            <!-- :ref="(el) => setRangeRef(item.id, el)" -->
                             <RangeSelect
                                 :key="item.id"
                                 :sheet="item.range.sheet"
@@ -42,32 +41,44 @@
                     </div>
 
                     <div class="row">
-                        <div class="option">
-                            <q-select
-                                label="Einheit"
-                                :model-value="item.unit"
-                                use-input
-                                hide-selected
-                                fill-input
-                                :options="unitOptions"
-                                @blur="(ev) => (item.unit = ev.target.value)"
-                            />
-                        </div>
-
-                        <div class="option">
-                            <q-select
-                                v-model="item.type"
-                                :options="seriesTypeOptions"
-                                emit-value
-                                map-options
-                                label="Typ"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="option">
-                            <q-select
+                        <div class="option bottom">
+                            <q-btn-dropdown outline>
+                                <template v-slot:label>
+                                    <span
+                                        class="color-option"
+                                        v-if="item.color"
+                                    >
+                                        <span
+                                            class="color-drop"
+                                            :style="{ color: item?.color?.hex }"
+                                        ></span>
+                                        <q-item-label>{{
+                                            filters.firstUpperCase(
+                                                item?.color?.key?.replace(
+                                                    '.',
+                                                    ' ',
+                                                ) || '',
+                                            )
+                                        }}</q-item-label>
+                                    </span>
+                                </template>
+                                <q-color
+                                    :model-value="item.color?.hex"
+                                    label="Farbe"
+                                    defaultView="palette"
+                                    no-header
+                                    no-header-tabs
+                                    no-footer
+                                    :palette="colorPaletteFlat"
+                                    @update:model-value="
+                                        (value) =>
+                                            (item.color = colorPalette.find(
+                                                (c) => c.hex === value,
+                                            ))
+                                    "
+                                />
+                            </q-btn-dropdown>
+                            <!-- <q-select
                                 v-model="item.color"
                                 :options="colorPalette"
                                 label="Farbe"
@@ -113,8 +124,52 @@
                                         </q-item-section>
                                     </q-item>
                                 </template>
-                            </q-select>
+                            </q-select> -->
                         </div>
+
+                        <div class="option">
+                            <q-select
+                                v-model="item.type"
+                                :options="seriesTypeOptions"
+                                emit-value
+                                map-options
+                                label="Typ"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="option">
+                            <q-select
+                                label="Einheit"
+                                :model-value="item.unit"
+                                use-input
+                                hide-selected
+                                fill-input
+                                :options="unitOptions"
+                                @blur="(ev) => (item.unit = ev.target.value)"
+                            />
+                        </div>
+
+                        <div class="option toggles">
+                            <q-field
+                                label="Daten-Labels"
+                                borderless
+                                model-value=" "
+                            >
+                                <q-toggle v-model="item.dataLabel" />
+                            </q-field>
+                            <q-field
+                                label="Sichtbarkeit"
+                                borderless
+                                model-value=" "
+                            >
+                                <q-toggle v-model="item.show" />
+                            </q-field>
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <div class="option">
                             <q-select
                                 v-model="item.style.stroke"
@@ -122,20 +177,13 @@
                                 label="Strich-Stil"
                             ></q-select>
                         </div>
+
                         <div class="option">
                             <q-select
                                 v-model="item.style.fill"
                                 :options="fillStyleOptions"
                                 label="Flächen-Stil"
                             ></q-select>
-                        </div>
-                        <div class="option">
-                            <q-field
-                                label="Datenbeschriftung"
-                                borderless
-                            >
-                                <q-toggle v-model="item.dataLabel" />
-                            </q-field>
                         </div>
                     </div>
 
@@ -145,7 +193,29 @@
                     <q-separator />
                     <div class="row">yAxis</div> -->
 
+                    <q-separator />
                     <div class="actions">
+                        <q-btn
+                            :class="['move-up', { invisible: index === 0 }]"
+                            flat
+                            color="grey-8"
+                            size="sm"
+                            label="Nach oben"
+                            icon="arrow_upward"
+                            @click="() => moveSeriesUp(index)"
+                        />
+                        <q-btn
+                            :class="[
+                                'move-down',
+                                { invisible: index === seriesList.length - 1 },
+                            ]"
+                            flat
+                            color="grey-8"
+                            size="sm"
+                            label="Nach unten"
+                            icon="arrow_downward"
+                            @click="() => moveSeriesDown(index)"
+                        />
                         <q-btn
                             class="remove"
                             flat
@@ -238,6 +308,9 @@ export default {
 
     computed: {
         ...mapState(useChartDataStore, ['seriesList']),
+        colorPaletteFlat() {
+            return this.colorPalette.map((item) => item.hex)
+        },
     },
 
     methods: {
@@ -255,12 +328,21 @@ export default {
             }
         },
 
-        setRangeRef(id, el) {
-            if (el) {
-                this.rangeRefs[id] = el
-            } else {
-                delete this.rangeRefs[id]
-            }
+        moveSeriesUp(index) {
+            if (index === 0) return
+            this.moveSeries(index, index - 1)
+        },
+
+        moveSeriesDown(index) {
+            if (index === this.seriesList.length - 1) return
+            this.moveSeries(index, index + 1)
+        },
+
+        moveSeries(from, to) {
+            const copy = this.seriesList[to]
+            this.seriesList[to] = this.seriesList[from]
+            this.seriesList[from] = copy
+            this.openedIndex = to
         },
     },
 }
@@ -275,11 +357,30 @@ export default {
     // justify-content:space-between;
     border-bottom: 1px solid #000;
 
-    .row {
+    > .row {
         display: grid;
         grid-auto-flow: column;
         grid-auto-columns: 1fr;
         gap: var(--k-gap);
+    }
+
+    .option {
+        &.bottom {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        &.toggles {
+            display: flex;
+            flex-flow: row;
+            align-items: center;
+            // justify-content: space-between;
+
+            .q-field {
+                // flex: auto 1 1;
+                width: 5.5rem;
+            }
+        }
     }
 
     .actions {
@@ -306,7 +407,12 @@ export default {
     align-items: center;
     flex: auto 1 0;
     gap: 1rem;
-    padding: 0 1.5rem;
+    padding: 0 0 0 0.25rem;
+    text-transform: none;
+
+    .q-item__label {
+        line-height: 1 !important;
+    }
 }
 
 :deep(.color-drop) {
@@ -326,6 +432,11 @@ export default {
     .q-list {
         margin-bottom: 1.5rem;
     }
+}
+
+.invisible {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .q-expansion-item {

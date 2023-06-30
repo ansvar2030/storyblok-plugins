@@ -125,8 +125,8 @@
                 <RangeSelect
                     ref="xAxisRange"
                     label="Bereich für X-Achse"
-                    :sheet="chartData.xAxis.sheet"
-                    :range="chartData.xAxis.range"
+                    :sheet="chartData.xAxis.range.sheet"
+                    :range="chartData.xAxis.range.text"
                     @update:range-details="(val) => (xAxis.rangeDetails = val)"
                     @update:data="(val) => (xAxis.data = val)"
                 />
@@ -134,8 +134,18 @@
 
             <div class="buttons">
                 <q-btn
+                    color="primary"
+                    flat
+                    dense
+                    icon="refresh"
+                    label="Sheets neu laden"
+                    @click="reloadSheets"
+                    :loading="loadingSheets"
+                />
+                <q-btn
                     color="secondary"
-                    outline
+                    flat
+                    dense
                     label="Neues Sheet"
                     @click="dialogChooseTemplate.show = true"
                 />
@@ -144,7 +154,8 @@
                     class="reload-data"
                     label="Daten neu laden"
                     icon="refresh"
-                    @click="reloadData"
+                    :loading="chartData.loading"
+                    @click="() => chartData.reloadData()"
                 />
             </div>
         </div>
@@ -201,6 +212,8 @@ export default {
                     message: '',
                 },
             },
+
+            loadingSheets: false,
         }
     },
 
@@ -255,17 +268,22 @@ export default {
                 })
         },
 
-        reloadData() {
-            this.sheetManager.getSheets()
-            this.$refs.xAxisRange.reloadData()
+        reloadSheets() {
+            if (this.loadingSheets) {
+                return
+            }
+
+            this.loadingSheets = true
+            this.sheetManager.getSheets().then(() => {
+                this.loadingSheets = false
+            })
         },
     },
 
     watch: {
         'xAxis.rangeDetails': {
             handler() {
-                this.chartData.xAxis.range = this.xAxis.rangeDetails.text
-                this.chartData.xAxis.sheet = this.xAxis.rangeDetails.sheet
+                this.chartData.xAxis.range = this.xAxis.rangeDetails
             },
             deep: true,
         },
@@ -289,12 +307,12 @@ export default {
     margin: 0 0 1.5rem;
 }
 
-.sheet-selection,
-.x-axis-range {
-    // width: fit-content;
-    width: 30%;
-    flex: auto 1 1;
-}
+// .sheet-selection,
+// .x-axis-range {
+//     // width: min-content;
+//     // width: 30%;
+//     // flex: auto 0 0;
+// }
 
 .sheet-selection {
     padding-top: 0.25rem;
@@ -303,8 +321,8 @@ export default {
     align-items: flex-start;
     justify-content: flex-start;
     gap: var(--k-gap);
-    width: 65%;
-    flex: auto 1 0;
+    width: 50%;
+    flex: auto 0 0;
 
     .q-select {
         flex: auto 1 0;

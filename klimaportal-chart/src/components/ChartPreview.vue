@@ -2,6 +2,7 @@
     <div
         class="chart-preview chart"
         :class="['width-' + width]"
+        :key="key"
     >
         <header v-if="!editable">
             <div class="title">
@@ -53,6 +54,17 @@
             </div>
         </header>
 
+        <q-btn
+            v-if="refreshButton"
+            class="refresh"
+            icon="refresh"
+            square
+            dense
+            color="primary"
+            title="Chart aktualisieren"
+            @click="refresh"
+        />
+
         <apexchart
             ref="chart"
             :type="options.chart.type"
@@ -93,6 +105,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        refreshButton: {
+            type: Boolean,
+            default: false,
+        },
     },
 
     setup() {
@@ -104,7 +120,9 @@ export default {
     },
 
     data() {
-        return {}
+        return {
+            key: this.generateKey(),
+        }
     },
 
     computed: {
@@ -118,6 +136,14 @@ export default {
     },
 
     methods: {
+        generateKey() {
+            return Math.random().toString(36).slice(2, 9)
+        },
+
+        refresh() {
+            this.key = this.generateKey()
+        },
+
         handleInputBlur(key, ev) {
             setTimeout(() => {
                 if (this.chartData[key].show && !ev.srcElement.value.trim()) {
@@ -140,6 +166,7 @@ export default {
 
 <style scoped lang="scss">
 .chart {
+    position: relative;
     display: flex;
     flex-flow: column;
     border: 1px solid #000;
@@ -240,5 +267,12 @@ export default {
     // .vue-apexcharts {
     //     // height: 260px;
     // }
+
+    .q-btn.refresh {
+        position: absolute;
+        right: 0.25rem;
+        top: 0.25rem;
+        z-index: 10;
+    }
 }
 </style>

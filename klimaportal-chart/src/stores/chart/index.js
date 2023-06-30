@@ -5,24 +5,31 @@ import {
     chartTypeOptions,
     stackedOptions,
     seriesTypeOptions,
-    unitOptions,
+    // unitOptions,
     strokeStyleOptions,
     fillStyleOptions,
+    widthOptions,
+    gridOptions,
+    dataTypeOptions,
+    dateFormats,
+    createChartDefaultOptions,
 } from './options'
 
 import dummyData from '@/tools/dummy-data.js'
 
+// import { useFieldPlugin } from '@/useFieldPlugin'
+import { useSheetManagerStore } from '@/stores/sheet-manager'
+
 export const useChartDataStore = defineStore(
     'chart-data',
     () => {
+        // const plugin = useFieldPlugin()
+        const sheetManager = useSheetManagerStore()
+
         const width = ref({
-            options: [
-                { value: 'single', label: 'Einfache Breite' },
-                { value: 'double', label: 'Doppelte Breite' },
-            ],
             value: '',
         })
-        width.value.value = width.value.options[0].value
+        width.value.value = widthOptions[0].value
 
         const title = ref({
             show: false,
@@ -40,57 +47,32 @@ export const useChartDataStore = defineStore(
 
         const grid = ref({
             show: true,
-            options: [
-                {
-                    value: 'horizontal',
-                    label: 'Horizontal',
-                },
-                {
-                    value: 'vertical',
-                    label: 'Vertikal',
-                },
-                {
-                    value: 'both',
-                    label: 'Beides',
-                },
-            ],
             value: '',
         })
-        grid.value.value = grid.value.options[0].value
+        grid.value.value = gridOptions[0].value
 
         const tooltip = ref({
             show: true,
         })
 
         const xAxis = ref({
-            range: '',
-            sheet: '',
+            range: {
+                text: '',
+                sheet: '',
+            },
             type: {
-                options: [
-                    {
-                        value: 'auto',
-                        label: 'Auto',
-                    },
-                    {
-                        value: 'date',
-                        label: 'Datum',
-                    },
-                ],
                 value: '',
             },
             categories: [],
             dateFormat: {
-                options: ['YYYY', 'MM.YYYY', 'DD.MM.YYYY'],
                 value: '',
             },
             angle: {
-                // options: ['0°', '22,5°', '45°', '67,5°', '90°'],
                 value: 0,
             },
         })
-        xAxis.value.type.value = xAxis.value.type.options[0].value
-        xAxis.value.dateFormat.value = xAxis.value.dateFormat.options[0]
-        // xAxis.angle.value = xAxis.angle.options[0]
+        xAxis.value.type.value = dataTypeOptions[0].value
+        xAxis.value.dateFormat.value = dateFormats[0]
 
         const type = ref('')
         type.value = chartTypeOptions[0].value
@@ -102,90 +84,10 @@ export const useChartDataStore = defineStore(
         const stacked = ref('')
         stacked.value = stackedOptions[0].value
 
-        function createDefaultOptions() {
-            return {
-                chart: {
-                    type: type.value,
-                    zoom: {
-                        enabled: false,
-                    },
-                    toolbar: {
-                        show: false,
-                    },
-                    height: 272,
-                },
-                xaxis: {
-                    type: 'datetime',
-                    lines: {
-                        show: true,
-                    },
-                    labels: {
-                        rotate: 0,
-                        rotateAlways: true,
-                    },
-                },
-                yaxis: [
-                    {
-                        lines: {
-                            show: false,
-                        },
-                        labels: {
-                            formatter: function (value) {
-                                return Math.round(value)
-                            },
-                        },
-                    },
-                ],
-                colors: ['#000', '#999'],
-                stroke: {
-                    width: 2,
-                    dashArray: [0, 5],
-                },
-                grid: {
-                    show: true,
-
-                    xaxis: {
-                        lines: {
-                            show: true,
-                        },
-                    },
-
-                    yaxis: {
-                        lines: {
-                            show: false,
-                        },
-                    },
-                },
-                fill: {
-                    type: 'solid',
-                    opacity: [1, 0.25],
-                },
-                legend: {
-                    horizontalAlign: 'left',
-                    // offsetY: 10,
-                    // offsetX: 0,
-                },
-                tooltip: {
-                    enabled: true,
-                    shared: true,
-                    intersect: false,
-                    x: {
-                        show: false,
-                        // formatter: (v) => new Date(v).getFullYear(),
-                    },
-                    y: {
-                        formatter: (v) => Math.round(v) + ' Mio. t',
-                        title: {
-                            formatter: (seriesName) => seriesName,
-                        },
-                    },
-                },
-            }
-        }
-
         const createSeries = (templateSeries) => {
             const data = {
                 id: Math.random().toString(36).slice(2, 9),
+                show: true,
                 name: '',
                 range: {
                     text: '',
@@ -234,7 +136,9 @@ export const useChartDataStore = defineStore(
         const seriesList = ref([])
         seriesList.value.push(createSeries())
         const filteredSeriesList = computed(() => {
-            const list = seriesList.value.filter((item) => item.data.length > 0)
+            const list = seriesList.value.filter(
+                (item) => item.show && item.data.length > 0,
+            )
 
             if (isSingleSeriesType.value) {
                 return list.slice(0, 1)
@@ -261,7 +165,18 @@ export const useChartDataStore = defineStore(
 
         const chartOptions = computed(() => {
             console.log('update chartOptions')
-            const opts = createDefaultOptions()
+            const opts = createChartDefaultOptions()
+
+            opts.chart.type = type.value
+
+            const typeCount = {}
+            filteredSeriesList.value.forEach((series) => {
+                typeCount[series.type] = (typeCount[series.type] || 0) + 1
+            })
+
+            if ((!typeCount['bar'] && typeCount['line']) || typeCount['area']) {
+                opts.chart.type = 'line'
+            }
 
             opts.grid.show = grid.value.show
             opts.grid.xaxis.lines.show = ['vertical', 'both'].includes(
@@ -275,6 +190,7 @@ export const useChartDataStore = defineStore(
             opts.tooltip.enabled = tooltip.value.show
 
             opts.xaxis.labels.rotate = 0 - xAxis.value.angle.value
+            opts.xaxis.labels.rotateAlways = xAxis.value.angle.value > 0
             opts.xaxis.categories = [...xAxis.value.categories]
 
             if (
@@ -300,7 +216,7 @@ export const useChartDataStore = defineStore(
             opts.chart.stackType = stacked.value === '100%' ? '100%' : 'normal'
 
             opts.stroke = {
-                width: 2,
+                width: 2, //type.value === 'bar' ? 1 : 2,
                 dashArray: [],
                 curve: [],
             }
@@ -320,6 +236,11 @@ export const useChartDataStore = defineStore(
             }
 
             filteredSeriesList.value.forEach((item, index) => {
+                // if (type.value === 'bar') {
+                // const width = item.type === 'bar' ? 1 : 2
+                // opts.stroke.width.push(width)
+                // }
+
                 opts.stroke.dashArray.push(
                     item.style.stroke?.settings?.dashArray,
                 )
@@ -425,25 +346,55 @@ export const useChartDataStore = defineStore(
                 item.type = 'default'
             })
 
-            if (preset.stacked) {
-                stacked.value = preset.stacked
-            } else {
-                stacked.value = stackedOptions[0].value
-            }
-
             if (preset.value === 'bar-line') {
                 seriesList.value.slice(1).forEach((item) => {
                     item.type = 'line'
                 })
             }
+
+            if (preset.stacked) {
+                stacked.value = preset.stacked
+            } else {
+                stacked.value = stackedOptions[0].value
+            }
         }
 
+        const loading = ref(false)
         function reloadData() {
-            console.log('reloadData')
+            if (loading.value) {
+                return false
+            }
+
+            loading.value = true
+            console.info('loading data')
+
+            return Promise.all(
+                [xAxis.value, ...filteredSeriesList.value].map((item) => {
+                    return sheetManager
+                        .getSheetData(
+                            sheetManager.sheetId,
+                            item.range.sheet + '!' + item.range.text,
+                        )
+                        .then((data) => {
+                            item.data = sheetManager.transformSheetData(
+                                data,
+                                item.range.direction,
+                            )
+                        })
+                        .catch((error) => {
+                            item.data = []
+                            console.error(error)
+                        })
+                        .then(() => {
+                            loading.value = false
+                        })
+                }),
+            )
         }
 
         return {
             // settings
+            loading,
             width,
             title,
             description,
@@ -467,30 +418,18 @@ export const useChartDataStore = defineStore(
     },
     {
         persist: {
-            // beforeRestore: (ctx) => {
-            //     const key = ctx.store.$id
-            //     const config = useRuntimeConfig()
-            //     try {
-            //         const persistedData = JSON.parse(localStorage.getItem(key))
-            //         if (
-            //             persistedData &&
-            //             persistedData.version !== config.public.version
-            //         ) {
-            //             // prevent restore
-            //             console.info('version mismatch, clearing order store')
-            //             localStorage.setItem(
-            //                 key,
-            //                 _omit(persistedData, ['data']),
-            //             )
-            //         }
-            //     } catch (error) {
-            //         console.warn('order store version check failed', error)
-            //         Bugsnag.notify(error, (event) => {
-            //             event.context = 'order-store.restore'
-            //         })
-            //     }
-            // },
-            // paths: ['version', 'settings', 'data'],
+            paths: [
+                'width',
+                'title',
+                'description',
+                'source',
+                'grid',
+                'tooltip',
+                'xAxis',
+                'stacked',
+                'type',
+                'seriesList',
+            ],
         },
     },
 )

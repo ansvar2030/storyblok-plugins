@@ -120,7 +120,6 @@ export const useSheetManagerStore = defineStore(
         }
 
         function getSheetNames(sheetId) {
-            console.log('GET SHEET NAMES', sheetId)
             return fetchWrapper('/sheet-names', {
                 query: { id: sheetId },
             })
@@ -130,6 +129,21 @@ export const useSheetManagerStore = defineStore(
             return fetchWrapper('/sheet-data', {
                 query: { id: sheetId, range },
             })
+        }
+
+        function transformSheetData(data = [], direction = '') {
+            if (!data || !data.length) {
+                return []
+            }
+
+            let series = []
+            if (direction === 'vertical') {
+                series = data.map((row) => row[0])
+            } else {
+                series = data[0]
+            }
+
+            return series.filter(Boolean)
         }
 
         async function reset() {
@@ -158,6 +172,7 @@ export const useSheetManagerStore = defineStore(
             getSheets,
             copyTemplate,
             getSheetData,
+            transformSheetData,
         }
     },
     {

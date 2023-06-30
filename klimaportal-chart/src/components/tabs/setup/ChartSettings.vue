@@ -3,10 +3,11 @@
         <div class="setting width">
             <q-select
                 v-model="chartData.width.value"
-                :options="chartData.width.options"
+                :options="widthOptions"
                 emit-value
                 borderless
                 map-options
+                dense
             />
             <div class="line"></div>
         </div>
@@ -15,6 +16,7 @@
             <chart-preview
                 ref="chartPreview"
                 :editable="true"
+                :refresh-button="true"
             />
         </div>
 
@@ -60,7 +62,7 @@
                 <div class="sub">
                     <q-select
                         v-model="chartData.grid.value"
-                        :options="chartData.grid.options"
+                        :options="gridOptions"
                         emit-value
                         borderless
                         dense
@@ -81,7 +83,7 @@
 
                     <q-select
                         v-model="chartData.xAxis.type.value"
-                        :options="chartData.xAxis.type.options"
+                        :options="dataTypeOptions"
                         emit-value
                         borderless
                         dense
@@ -91,7 +93,7 @@
                     <q-select
                         v-show="chartData.xAxis.type.value === 'date'"
                         v-model="chartData.xAxis.dateFormat.value"
-                        :options="chartData.xAxis.dateFormat.options"
+                        :options="dateFormats"
                         borderless
                         dense
                         map-options
@@ -120,7 +122,7 @@
                             :label-value="chartData.xAxis.angle.value + ' °'"
                             :min="0"
                             :step="22.5"
-                            :max="90"
+                            :max="45"
                             dense
                         />
                     </div>
@@ -133,6 +135,12 @@
 <script>
 import { useChartDataStore } from '@/stores/chart'
 import ChartPreview from '@/components/ChartPreview.vue'
+import {
+    widthOptions,
+    gridOptions,
+    dataTypeOptions,
+    dateFormats,
+} from '@/stores/chart/options'
 
 export default {
     components: {
@@ -144,6 +152,11 @@ export default {
 
         return {
             chartData,
+
+            widthOptions,
+            gridOptions,
+            dataTypeOptions,
+            dateFormats,
         }
     },
 
@@ -214,6 +227,7 @@ export default {
 
     &.width {
         grid-column: 2;
+        transform: translate(0, -0.875rem);
 
         .q-select {
             position: relative;

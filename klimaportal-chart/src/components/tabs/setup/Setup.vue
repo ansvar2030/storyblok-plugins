@@ -62,8 +62,8 @@ export default {
     display: grid;
     grid-template-columns: minmax(25%, 50%) 1fr;
     grid-template-rows: min-content min-content 1fr;
-    padding: var(--k-gap);
     gap: var(--k-gap);
+    padding: 0;
 }
 
 header {

@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 
 import App from './App.vue'
 import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { Quasar, Notify } from 'quasar'
 import quasarLang from 'quasar/lang/de'
 import quasarIconSet from 'quasar/icon-set/svg-material-icons'
@@ -26,7 +26,25 @@ if (!document.querySelector('#app')) {
 const app = createApp(App)
 
 const pinia = createPinia()
-pinia.use(piniaPluginPersistedstate)
+
+// const store = {}
+pinia.use(
+    createPersistedState({
+        storage: {
+            getItem(key) {
+                // delay till app is mounted
+                return localStorage.getItem(key)
+                // return store[key] || null
+            },
+            setItem(key, value) {
+                // console.log(app)
+                // store[key] = value
+                // plugin.setContent(store)
+                return localStorage.setItem(key, value)
+            },
+        },
+    }),
+)
 app.use(pinia)
 
 app.provide('filters', filters)
