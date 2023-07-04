@@ -1,19 +1,19 @@
 <template>
     <div
         class="chart-preview chart"
-        :class="['width-' + width]"
+        :class="['width-' + chartData.width.value]"
         :key="key"
     >
         <header v-if="!editable">
             <div class="title">
-                <h3 v-show="title?.show">
-                    {{ title?.value }}
+                <h3 v-show="chartData.title?.show">
+                    {{ chartData.title?.value }}
                 </h3>
             </div>
 
             <div class="description">
-                <p v-show="description?.show">
-                    {{ description?.value }}
+                <p v-show="chartData.description?.show">
+                    {{ chartData.description?.value }}
                 </p>
             </div>
         </header>
@@ -127,9 +127,6 @@ export default {
 
     computed: {
         ...mapState(useChartDataStore, {
-            width: (store) => store.transformedData.width,
-            title: (store) => store.transformedData.title,
-            description: (store) => store.transformedData.description,
             options: (store) => store.transformedData.options,
             series: (store) => store.transformedData.series,
         }),

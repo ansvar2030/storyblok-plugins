@@ -369,14 +369,14 @@ export default {
 
         processedRange: {
             handler(value) {
-                console.log('update range', value)
+                // console.log('update range', value)
                 this.$emit('update:range-details', value)
             },
         },
 
         transformedData: {
             handler(value) {
-                console.log('transformedData', value)
+                // console.log('transformedData', value)
                 this.$emit('update:data', value)
             },
         },

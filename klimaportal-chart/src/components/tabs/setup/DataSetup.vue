@@ -161,7 +161,7 @@
             <label class="form-label">Beispiel</label>
 
             <img
-                :src="`/sheet-example.svg`"
+                :src="`https://cdn.hub.ansvar.com/sheet-example.svg`"
                 alt=""
                 width="1028"
                 height="182"

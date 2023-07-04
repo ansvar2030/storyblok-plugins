@@ -7,8 +7,6 @@ import { Quasar, Notify } from 'quasar'
 import quasarLang from 'quasar/lang/de'
 
 import VueApexCharts from 'vue3-apexcharts'
-// import * as test from 'https://www.unpkg.com/vue3-apexcharts@1.4.1/src/index.js'
-// console.log(VueApexCharts)
 import VueNumberFormat from '@coders-tm/vue-number-format'
 
 import filters from './tools/filters.js'

@@ -1,9 +1,11 @@
-import babel from '@rollup/plugin-babel'
+// import babel from '@rollup/plugin-babel'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import alias from 'rollup-plugin-alias'
+import replace from '@rollup/plugin-replace'
 
 export default [
     {
+        external: ['vue'],
         input: 'node_modules/vue3-apexcharts/src/index.js',
         output: [
             {
@@ -22,10 +24,16 @@ export default [
                     },
                 ],
             }),
-            babel({
-                // plugins: ['@babel/plugin-proposal-class-properties'],
-                // presets: ['@babel/preset-flow'],
-            }),
+            replace(
+                {
+                    'process.env.NODE_ENV': JSON.stringify('production'),
+                },
+                { preventAssignment: false },
+            ),
+            // babel({
+            //     // plugins: ['@babel/plugin-proposal-class-properties'],
+            //     // presets: ['@babel/preset-flow'],
+            // }),
         ],
     },
 ]

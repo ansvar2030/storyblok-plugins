@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
     colorPalette,
     chartTypeOptions,
@@ -275,7 +275,7 @@ export const useChartDataStore = defineStore(
 
         const chartSeries = computed(() => {
             const dataSeries = []
-            console.log('update chartSeries')
+            // console.log('update chartSeries')
 
             if (isSingleSeriesType.value) {
                 if (filteredSeriesList.value.length === 0) {
@@ -310,15 +310,22 @@ export const useChartDataStore = defineStore(
             return dataSeries
         })
 
-        const transformedData = computed(() => {
-            return {
-                width: width.value.value,
-                title: title.value,
-                description: description.value,
-                options: chartOptions.value,
-                series: chartSeries.value,
-            }
-        })
+        const transformedData = ref({})
+        watch(
+            () => [chartSeries.value, chartOptions.value],
+            () => {
+                transformedData.value.options = chartOptions.value
+                transformedData.value.series = chartSeries.value
+                console.log('update transformedData')
+            },
+            { immediate: true, deep: true },
+        )
+        // const transformedData = computed(() => {
+        //     return {
+        //         options: chartOptions.value,
+        //         series: chartSeries.value,
+        //     }
+        // })
 
         function addSeries() {
             const lastSeries =
@@ -417,19 +424,6 @@ export const useChartDataStore = defineStore(
         }
     },
     {
-        persist: {
-            paths: [
-                'width',
-                'title',
-                'description',
-                'source',
-                'grid',
-                'tooltip',
-                'xAxis',
-                'stacked',
-                'type',
-                'seriesList',
-            ],
-        },
+        persist: true,
     },
 )

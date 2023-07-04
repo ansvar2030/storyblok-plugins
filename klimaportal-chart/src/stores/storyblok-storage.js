@@ -29,7 +29,7 @@ function Storage() {
         },
 
         getItem(key) {
-            console.log('get item', key)
+            // console.log('get item', key)
             // delay till app is mounted
             if (!self.plugin) {
                 console.warn('plugin not ready', 'get', key)
@@ -42,7 +42,13 @@ function Storage() {
         },
 
         setItem(key, value) {
-            console.log('set item', key)
+            // if (key === 'chart-data') {
+            //     console.log(
+            //         'set item',
+            //         value.transformedData.options.xaxis.categories,
+            //         value.xAxis.categories,
+            //     )
+            // }
 
             if (!self.plugin) {
                 console.warn('plugin not ready', 'set', key)

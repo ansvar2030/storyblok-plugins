@@ -44,7 +44,7 @@ export default {
                 @click="chartData.setPreset(preset)"
             >
                 <img
-                    :src="`/chart-presets/${preset.value}.svg`"
+                    :src="`https://cdn.hub.ansvar.com/chart-presets/${preset.value}.svg`"
                     alt=""
                     width="111"
                     height="106"

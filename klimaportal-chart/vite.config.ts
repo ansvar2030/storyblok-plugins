@@ -4,7 +4,6 @@ import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
 import * as querystring from 'querystring'
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
 import { fileURLToPath, URL } from 'url'
-import alias from 'rollup-plugin-alias'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -31,17 +30,7 @@ export default defineConfig({
                 //     // ...renderChunks(dependencies),
                 // },
             },
-            external: ['vue3-apexcharts'],
-            plugins: [
-                alias({
-                    entries: [
-                        {
-                            find: 'vue3-apexcharts',
-                            replacement: 'dist-apexcharts/apexcharts.esm.js',
-                        },
-                    ],
-                }),
-            ],
+            // external: ['vue3-apexcharts'],
         },
     },
     server: {
@@ -50,6 +39,14 @@ export default defineConfig({
     },
     resolve: {
         alias: [
+            //     {
+            //         find: 'vue3-apexcharts',
+            //         // replacement:
+            //         //     'https://www.unpkg.com/apexcharts@3.41.0/dist/apexcharts.esm.js',
+            //         replacement: 'dist-apexcharts/vue3-apexcharts.esm.js',
+            //         // replacement:
+            //         //     'https://cdn.hub.ansvar.com/vue3-apexcharts.esm.js',
+            //     },
             {
                 find: '@',
                 replacement: fileURLToPath(new URL('./src', import.meta.url)),

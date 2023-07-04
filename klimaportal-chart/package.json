@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "build-apexcharts": "rollup --config rollup-esm.config.js",
+        "build-apexcharts": "rollup --config rollup-apexcharts.config.js",
         "preview": "vite preview",
         "deploy": "npm run build && npx @storyblok/field-plugin-cli@alpha deploy"
     },
@@ -26,6 +26,7 @@
         "@quasar/vite-plugin": "^1.3.3",
         "@rollup/plugin-babel": "^6.0.3",
         "@rollup/plugin-node-resolve": "^15.1.0",
+        "@rollup/plugin-replace": "^5.0.2",
         "@rushstack/eslint-patch": "^1.3.2",
         "@vitejs/plugin-vue": "^4.1.0",
         "@vue/devtools": "^6.5.0",
