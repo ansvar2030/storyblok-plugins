@@ -4,49 +4,16 @@ import { onMounted, ref } from 'vue'
 import { matAddchart } from '@quasar/extras/material-icons'
 import TabSetup from './tabs/setup/Setup.vue'
 import TabData from './tabs/data/Data.vue'
-import { useChartDataStore } from '@/stores/chart'
 import { useSheetManagerStore } from '@/stores/sheet-manager'
-import debounce from '@/tools/debounce'
+import { useStoryblokStorage } from '@/stores/storyblok-storage'
 
 const plugin = useFieldPlugin()
-// console.log('plugin', plugin)
-// window.sbPlugin = plugin
+const storyblokStorage = useStoryblokStorage()
 
-// const chartData = useChartDataStore()
-const sheetManager = useSheetManagerStore()
 onMounted(() => {
+    const sheetManager = useSheetManagerStore()
     sheetManager.reset()
 })
-
-// function loadState() {}
-
-// const saveState = debounce(() => {
-//     console.log('saving state')
-// }, 2000).fn
-
-// chartData.$subscribe((mutation, state) => {
-//     console.log('change detected')
-//     saveState()
-// })
-// watch(
-//     () => [
-//         chartData.width,
-//         chartData.title,
-//         chartData.description,
-//         chartData.source,
-//         chartData.grid,
-//         chartData.tooltip,
-//         chartData.xAxis,
-//         chartData.stacked,
-//         chartData.type,
-//         chartData.seriesList,
-//         chartData.transformedData,
-//     ],
-//     () => {
-//         console.log('change detected')
-//         saveState()
-//     },
-// )
 
 const tab = ref('setup')
 </script>
@@ -54,7 +21,14 @@ const tab = ref('setup')
 <template>
     <div :class="['container', { 'in-modal': plugin.data.isModalOpen }]">
         <header>
-            <h1>Diagramm <q-icon :name="matAddchart" /> Editor</h1>
+            <h1>
+                Diagramm
+                <q-icon
+                    :name="matAddchart"
+                    color="secondary"
+                />
+                Editor
+            </h1>
             <q-btn
                 :icon="
                     plugin.data.isModalOpen ? 'fullscreen_exit' : 'fullscreen'
@@ -150,6 +124,7 @@ const tab = ref('setup')
 @import '@/assets/tools.scss';
 
 .container {
+    overflow: hidden;
     padding: 0;
     max-width: var(--k-page-max-width);
     margin: 0 auto;
@@ -195,6 +170,7 @@ header {
         &.open-modal {
             display: block;
             width: fit-content;
+            margin: 1rem 0 0;
         }
 
         &.open-modal-round {

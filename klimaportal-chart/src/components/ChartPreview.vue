@@ -264,10 +264,6 @@ export default {
         }
     }
 
-    // .vue-apexcharts {
-    //     // height: 260px;
-    // }
-
     .q-btn.refresh {
         position: absolute;
         right: 0.25rem;

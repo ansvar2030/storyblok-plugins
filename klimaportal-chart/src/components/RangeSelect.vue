@@ -180,6 +180,10 @@ export default {
         },
 
         transformedData() {
+            if (this.data.length === 0) {
+                return []
+            }
+
             return this.sheetManager.transformSheetData(
                 this.data,
                 this.processedRange.direction,
@@ -322,6 +326,23 @@ export default {
             this.inputRangeRaw = value
         },
 
+        // wait till sheetManager is ready
+        'sheetManager.sheetNames': {
+            handler() {
+                if (!this.sheet) {
+                    return
+                }
+
+                if (this.sheetManager.sheetNames.includes(this.sheet)) {
+                    this.inputSheetName = this.sheet
+                    return
+                }
+
+                this.inputSheetName = ''
+            },
+            once: true,
+        },
+
         sheet: {
             handler(value) {
                 if (!value) {
@@ -348,12 +369,14 @@ export default {
 
         processedRange: {
             handler(value) {
+                console.log('update range', value)
                 this.$emit('update:range-details', value)
             },
         },
 
         transformedData: {
             handler(value) {
+                console.log('transformedData', value)
                 this.$emit('update:data', value)
             },
         },
@@ -407,6 +430,10 @@ export default {
 
         :deep(.q-input input) {
             text-transform: uppercase;
+        }
+
+        .q-input {
+            min-width: 100px;
         }
     }
 

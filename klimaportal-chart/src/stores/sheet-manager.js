@@ -19,14 +19,17 @@ export const useSheetManagerStore = defineStore(
         })
 
         const sheetNames = ref([])
-        watch(sheetId, async (newSheetId) => {
-            if (!newSheetId) {
-                sheetNames.value = []
-                return
-            }
+        watch(
+            () => sheetId.value,
+            async (newSheetId) => {
+                if (!newSheetId) {
+                    sheetNames.value = []
+                    return
+                }
 
-            sheetNames.value = await getSheetNames(newSheetId)
-        })
+                sheetNames.value = await getSheetNames(newSheetId)
+            },
+        )
 
         const templates = ref([])
 
@@ -176,6 +179,8 @@ export const useSheetManagerStore = defineStore(
         }
     },
     {
-        persist: {},
+        persist: {
+            paths: ['sheetId'],
+        },
     },
 )

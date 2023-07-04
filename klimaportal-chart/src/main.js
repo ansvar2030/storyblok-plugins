@@ -5,14 +5,17 @@ import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { Quasar, Notify } from 'quasar'
 import quasarLang from 'quasar/lang/de'
-import quasarIconSet from 'quasar/icon-set/svg-material-icons'
+
 import VueApexCharts from 'vue3-apexcharts'
+// import * as test from 'https://www.unpkg.com/vue3-apexcharts@1.4.1/src/index.js'
+// console.log(VueApexCharts)
 import VueNumberFormat from '@coders-tm/vue-number-format'
 
 import filters from './tools/filters.js'
 
-import '@quasar/extras/material-icons/material-icons.css'
+// import '@quasar/extras/material-icons/material-icons.css'
 import 'quasar/src/css/index.sass'
+import { storage } from '@/stores/storyblok-storage'
 
 import './assets/index.scss'
 
@@ -30,19 +33,11 @@ const pinia = createPinia()
 // const store = {}
 pinia.use(
     createPersistedState({
-        storage: {
-            getItem(key) {
-                // delay till app is mounted
-                return localStorage.getItem(key)
-                // return store[key] || null
-            },
-            setItem(key, value) {
-                // console.log(app)
-                // store[key] = value
-                // plugin.setContent(store)
-                return localStorage.setItem(key, value)
-            },
+        serializer: {
+            serialize: (value) => value,
+            deserialize: (value) => value,
         },
+        storage,
     }),
 )
 app.use(pinia)
@@ -50,21 +45,8 @@ app.use(pinia)
 app.provide('filters', filters)
 
 app.use(Quasar, {
-    plugins: { Notify }, // import Quasar plugins and add here
+    plugins: { Notify },
     lang: quasarLang,
-    iconSet: quasarIconSet,
-    /*
-  config: {
-    brand: {
-      // primary: '#e46262',
-      // ... or all other brand colors
-    },
-    notify: {...}, // default set of options for Notify Quasar plugin
-    loading: {...}, // default set of options for Loading Quasar plugin
-    loadingBar: { ... }, // settings for LoadingBar Quasar plugin
-    // ..and many more (check Installation card on each Quasar component/directive/plugin)
-  }
-  */
 })
 
 app.use(VueApexCharts)

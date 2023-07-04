@@ -81,10 +81,6 @@
     }
 }
 
-html {
-    height: 100%;
-}
-
 body {
     @include scroll-vertical-colored;
     @include scroll-border;
@@ -114,4 +110,8 @@ mark {
     color: get-color('primary.base-text');
     background-color: get-color('primary.base');
     // @apply font-semibold;
+}
+
+body.q-body--prevent-scroll {
+    position: static !important;
 }

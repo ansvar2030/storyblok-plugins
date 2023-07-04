@@ -9,7 +9,7 @@
                 <q-separator />
 
                 <q-card-section
-                    style="max-height: 50vh"
+                    style="max-height: 50%"
                     class="scroll"
                 >
                     <q-field
@@ -63,10 +63,7 @@
 
                 <q-separator />
 
-                <q-card-section
-                    style="max-height: 50vh"
-                    class="scroll"
-                >
+                <q-card-section>
                     <q-input
                         v-model="dialogChooseTemplate.name"
                         label="Name des Sheets"
