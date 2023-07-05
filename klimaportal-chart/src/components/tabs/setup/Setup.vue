@@ -23,25 +23,19 @@ export default {
 
 <template>
     <div class="setup">
-        <header>
-            <h2>Diagrammtyp</h2>
-            <p>
-                Das ist eine Voreinstellung, die sich beliebig anpassen &
-                erweitern lässt.
-            </p>
-        </header>
-        <!-- <q-select
-            filled
-            v-model="preset"
-            label="Standard"
-            :options="optionsHTML"
-        /> -->
         <div class="presets">
+            <h3>Diagrammtyp</h3>
+            <p>
+                Dies sind Voreinstellungen, die sich beliebig anpassen &
+                erweitern lassen.
+            </p>
+
             <q-btn
                 v-for="preset of presetOptions"
                 color="grey"
                 outline
                 @click="chartData.setPreset(preset)"
+                :key="preset.value"
             >
                 <img
                     :src="`https://cdn.hub.ansvar.com/chart-presets/${preset.value}.svg`"
@@ -66,11 +60,6 @@ export default {
     padding: 0;
 }
 
-header {
-    grid-column: 1 / span 2;
-    grid-row: 1;
-}
-
 .presets {
     grid-column: 1;
     grid-row: 2;
@@ -80,6 +69,15 @@ header {
     align-items: flex-start;
     align-self: self-start;
     gap: 0.5rem;
+
+    h3 {
+        line-height: 1;
+        margin: 0 0 0.5rem;
+    }
+
+    p {
+        margin: 0 0 1rem;
+    }
 
     .q-btn {
         padding: 1px;

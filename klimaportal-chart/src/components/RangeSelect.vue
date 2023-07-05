@@ -15,12 +15,19 @@
             </q-select>
 
             <q-input
-                v-model="inputRangeRaw"
+                ref="inputRange"
+                :model-value="inputRangeRaw"
                 placeholder="D2:D13"
                 dense
                 no-error-icon
                 :rules="[validateRange]"
                 @blur="updateRange"
+                @change="
+                    (val) => {
+                        inputRangeRaw = val
+                        updateRange()
+                    }
+                "
                 ><template v-slot:append>
                     <q-btn
                         icon="wysiwyg"

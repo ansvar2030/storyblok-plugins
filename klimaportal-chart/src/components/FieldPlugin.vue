@@ -21,14 +21,17 @@ const tab = ref('setup')
 <template>
     <div :class="['container', { 'in-modal': plugin.data.isModalOpen }]">
         <header>
-            <h1>
-                Diagramm
-                <q-icon
-                    :name="matAddchart"
-                    color="secondary"
-                />
-                Editor
-            </h1>
+            <div class="title">
+                <h1>
+                    Diagramm
+                    <q-icon
+                        :name="matAddchart"
+                        color="secondary"
+                    />
+                    Editor
+                    <span class="subline">ansvar2030</span>
+                </h1>
+            </div>
             <q-btn
                 :icon="
                     plugin.data.isModalOpen ? 'fullscreen_exit' : 'fullscreen'
@@ -69,11 +72,6 @@ const tab = ref('setup')
                     icon="table_chart"
                     label="Daten"
                 />
-                <!-- <q-tab
-                name="extras"
-                icon="settings_suggest"
-                label="Extras"
-            /> -->
             </q-tabs>
             <q-separator />
 
@@ -124,7 +122,6 @@ const tab = ref('setup')
 @import '@/assets/tools.scss';
 
 .container {
-    overflow: hidden;
     padding: 0;
     max-width: var(--k-page-max-width);
     margin: 0 auto;
@@ -164,6 +161,22 @@ header {
 
     h1 {
         line-height: 1.2;
+    }
+
+    .subline {
+        display: block;
+        font-size: 0.875rem;
+        line-height: 1;
+        text-align: right;
+        color: #888;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+
+    .title {
+        display: flex;
+        flex-flow: row;
+        justify-content: flex-start;
     }
 
     .q-btn {

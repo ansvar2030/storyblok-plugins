@@ -237,7 +237,32 @@ export const seriesTypeOptions = [
     },
 ]
 
-export const unitOptions = ['Mio. t', 'Mio. t CO2', 'Mio. t CO2e']
+export const unitOptions = [
+    { group: 'Allgemein' },
+    'Stk.',
+    '%',
+    { group: 'Energie' },
+    'MWh',
+    'GWh',
+    'TWh',
+    { group: 'Gewicht' },
+    't',
+    'Tsd. t',
+    'Mio. t',
+    { group: 'Klima' },
+    't CO₂',
+    'Mio. t CO₂',
+    'Mio. t CO₂e',
+].map((item) => {
+    if (typeof item === 'string') {
+        return {
+            label: item,
+            value: item,
+        }
+    }
+
+    return item
+})
 
 export const strokeStyleOptions = [
     {
@@ -445,6 +470,12 @@ export function createChartDefaultOptions() {
         //         size: 8,
         //     },
         // },
+        forecastDataPoints: {
+            count: 0,
+            fillOpacity: 0.5,
+            strokeWidth: undefined,
+            dashArray: 5,
+        },
         legend: {
             horizontalAlign: 'left',
             // offsetY: 10,
@@ -505,7 +536,7 @@ export function createChartDefaultOptions() {
                         .map(
                             (item) =>
                                 `<span class="marker" style="color:${item.color};"></span>
-                                <span class="name">${item.name}</span>: <span class="value">${item.value} ${item.unit}</span>`,
+                                <span class="name">${item.name}:</span> <span class="value">${item.value} ${item.unit}</span>`,
                         )
                         .join('</li><li>') +
                     '</li>' +

@@ -22,6 +22,19 @@ export default {
     data() {
         return {}
     },
+
+    computed: {
+        forecastLabel() {
+            if (this.chartData.forecast.count === 0) {
+                return 'Aus'
+            }
+
+            return this.chartData.xAxis.categories[
+                this.chartData.xAxis.categories.length -
+                    this.chartData.forecast.count
+            ]
+        },
+    },
 }
 </script>
 
@@ -64,6 +77,34 @@ export default {
                     Mehrere Datensätze können aufeinander gestapelt statt unter
                     übereinander angezeigt werden.
                 </span> -->
+            </div>
+
+            <div class="row">
+                <div class="label">
+                    Schätzungen
+                    <span v-if="chartData.forecast.count > 0"
+                        >ab {{ forecastLabel }}</span
+                    >
+                </div>
+
+                <q-slider
+                    v-if="chartData.xAxis.categories.length > 0"
+                    :modelValue="chartData.forecast.count"
+                    @change="(value) => (chartData.forecast.count = value)"
+                    label
+                    switch-label-side
+                    markers
+                    :label-value="forecastLabel"
+                    :min="0"
+                    :step="1"
+                    :max="chartData.xAxis.categories.length - 1"
+                    dense
+                    reverse
+                />
+
+                <span class="hint">
+                    Welche Datenpunkte sollen als Schätzung dargestellt werden?
+                </span>
             </div>
         </div>
 

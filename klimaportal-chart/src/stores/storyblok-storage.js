@@ -42,6 +42,7 @@ function Storage() {
         },
 
         setItem(key, value) {
+            // console.log('set item', key)
             // if (key === 'chart-data') {
             //     console.log(
             //         'set item',

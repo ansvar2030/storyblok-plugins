@@ -84,6 +84,10 @@ export const useChartDataStore = defineStore(
         const stacked = ref('')
         stacked.value = stackedOptions[0].value
 
+        const forecast = ref({
+            count: 0,
+        })
+
         const createSeries = (templateSeries) => {
             const data = {
                 id: Math.random().toString(36).slice(2, 9),
@@ -226,6 +230,8 @@ export const useChartDataStore = defineStore(
                 type: [],
             }
 
+            opts.forecastDataPoints.count = forecast.value.count
+
             opts.dataLabels = {
                 enabled: true,
                 enabledOnSeries: [],
@@ -260,7 +266,6 @@ export const useChartDataStore = defineStore(
                     name: item.name,
                     unit: item.unit,
                     color: item.color.hex,
-                    style: item.style.value,
                     dataLabel: item.dataLabel,
                     tooltip: {
                         precision: item.tooltip.precision,
@@ -275,7 +280,7 @@ export const useChartDataStore = defineStore(
 
         const chartSeries = computed(() => {
             const dataSeries = []
-            // console.log('update chartSeries')
+            console.log('update chartSeries')
 
             if (isSingleSeriesType.value) {
                 if (filteredSeriesList.value.length === 0) {
@@ -410,6 +415,7 @@ export const useChartDataStore = defineStore(
             tooltip,
             xAxis,
             stacked,
+            forecast,
             type,
             seriesList,
 

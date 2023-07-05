@@ -65,13 +65,16 @@
             @click="refresh"
         />
 
-        <apexchart
-            ref="chart"
-            :type="options.chart.type"
-            :options="options"
-            :series="series"
-            :height="options.chart.height"
-        ></apexchart>
+        <div class="container">
+            <apexchart
+                v-if="mounted && transformedData.options?.chart?.type"
+                ref="chart"
+                :type="transformedData.options?.chart?.type"
+                :options="transformedData.options"
+                :series="transformedData.series"
+                :height="transformedData.options?.chart?.height"
+            ></apexchart>
+        </div>
 
         <footer v-if="!editable">
             <div
@@ -96,7 +99,6 @@
 </template>
 
 <script>
-import { mapState } from 'pinia'
 import { useChartDataStore } from '@/stores/chart'
 
 export default {
@@ -122,14 +124,24 @@ export default {
     data() {
         return {
             key: this.generateKey(),
+            mounted: false,
         }
     },
 
+    mounted() {
+        // FIXME: hack to fix chart animation
+        setTimeout(() => {
+            this.mounted = true
+        }, 200)
+    },
+
     computed: {
-        ...mapState(useChartDataStore, {
-            options: (store) => store.transformedData.options,
-            series: (store) => store.transformedData.series,
-        }),
+        transformedData() {
+            return {
+                options: this.chartData.transformedData.options,
+                series: this.chartData.transformedData.series,
+            }
+        },
     },
 
     methods: {
@@ -151,11 +163,11 @@ export default {
     },
 
     watch: {
-        width(val) {
-            // console.log(this.$refs.chart)
-            this.$nextTick(() => {
-                this.$refs.chart.refresh()
-            })
+        options: {
+            handler(val) {
+                console.log('update chart options', JSON.stringify(val))
+            },
+            deep: true,
         },
     },
 }
@@ -196,7 +208,12 @@ export default {
     footer {
         display: flex;
         flex-flow: column;
-        padding: 0 1rem 1rem;
+        padding: 0.5rem 1rem 1rem;
+    }
+
+    .container {
+        position: relative;
+        height: 272px;
     }
 
     .title {

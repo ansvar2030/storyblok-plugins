@@ -143,12 +143,33 @@
                             <q-select
                                 label="Einheit"
                                 :model-value="item.unit"
+                                emit-value
                                 use-input
                                 hide-selected
                                 fill-input
                                 :options="unitOptions"
+                                options-dense
                                 @blur="(ev) => (item.unit = ev.target.value)"
-                            />
+                                ><template v-slot:option="scope">
+                                    <q-item-label
+                                        header
+                                        v-if="scope.opt.group"
+                                        v-bind="scope.itemProps"
+                                        >{{ scope.opt.group }}</q-item-label
+                                    >
+                                    <q-item
+                                        v-else
+                                        v-bind="scope.itemProps"
+                                        v-on="scope"
+                                    >
+                                        <q-item-section>
+                                            <q-item-label>{{
+                                                scope.opt.label
+                                            }}</q-item-label>
+                                        </q-item-section>
+                                    </q-item>
+                                </template></q-select
+                            >
                         </div>
 
                         <div class="option toggles">

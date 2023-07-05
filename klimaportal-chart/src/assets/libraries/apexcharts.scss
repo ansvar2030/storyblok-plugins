@@ -1,13 +1,19 @@
 .chart {
+    .apexcharts-xaxistooltip.apexcharts-theme-light {
+        left: 0;
+        top: 0;
+    }
+
     .apexcharts-tooltip.apexcharts-theme-light {
         border-radius: 0;
-        border: 1px solid #000;
-        padding: .5rem;
         font-weight: 500;
+        padding: 0;
+        border: none;
 
         ul {
             list-style: none;
-            padding: 0;
+            border: 1px solid #000;
+            padding: .5rem;
             margin: 0;
         }
 
