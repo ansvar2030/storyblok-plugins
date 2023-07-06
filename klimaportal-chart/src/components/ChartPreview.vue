@@ -83,6 +83,7 @@
                 :series="transformedData.series"
                 :height="transformedData.options?.chart?.height"
                 @animationEnd="updatePreviewImageDebounced"
+                @updated="updatePreviewImageDebounced"
             ></apexchart>
         </div>
 
@@ -138,8 +139,9 @@ export default {
             mounted: false,
 
             updatePreviewImageDebounced: debounce(
-                () => this.updatePreviewImage,
-                2000,
+                () =>
+                    !this.chartData.showDummyData && this.updatePreviewImage(),
+                3000,
             ).fn,
         }
     },
@@ -171,7 +173,7 @@ export default {
 
         updatePreviewImage() {
             this.$refs.chart.chart
-                .dataURI({ width: 200 })
+                .dataURI({ scale: 0.66 })
                 .then(({ imgURI }) => {
                     console.info(
                         'preview image generated',
@@ -192,10 +194,6 @@ export default {
 
     watch: {
         'chartData.width.value'() {
-            // this.$nextTick(() => {
-            //     this.refresh()
-            // })
-
             setTimeout(() => {
                 this.refresh()
             }, 200)

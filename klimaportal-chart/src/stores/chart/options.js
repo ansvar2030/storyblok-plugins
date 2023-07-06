@@ -402,6 +402,7 @@ export function createChartDefaultOptions() {
             height: 272,
             // defaultLocale: 'de',
             fontFamily: 'Satoshi, sans-serif',
+            background: '#fff',
         },
         xaxis: {
             type: 'datetime',
