@@ -26,6 +26,8 @@ export const useChartDataStore = defineStore(
         // const plugin = useFieldPlugin()
         const sheetManager = useSheetManagerStore()
 
+        const previewImage = ref('')
+
         const width = ref({
             value: '',
         })
@@ -88,11 +90,12 @@ export const useChartDataStore = defineStore(
             count: 0,
         })
 
+        let createSeriesCount = 1
         const createSeries = (templateSeries) => {
             const data = {
                 id: Math.random().toString(36).slice(2, 9),
                 show: true,
-                name: '',
+                name: 'Serie ' + createSeriesCount,
                 range: {
                     text: '',
                     sheet: '',
@@ -125,6 +128,9 @@ export const useChartDataStore = defineStore(
                 data.range.text = templateSeries.range.text
                 data.range.sheet = templateSeries.range.sheet
 
+                data.type = templateSeries.type
+                data.unit = templateSeries.unit
+
                 data.style.stroke = templateSeries.style.stroke
                 data.style.fill = templateSeries.style.fill
                 data.dataLabel = templateSeries.dataLabel
@@ -134,21 +140,69 @@ export const useChartDataStore = defineStore(
                 data.tooltip.precision = templateSeries.tooltip.precision
             }
 
+            createSeriesCount++
             return data
         }
 
         const seriesList = ref([])
         seriesList.value.push(createSeries())
-        const filteredSeriesList = computed(() => {
-            const list = seriesList.value.filter(
-                (item) => item.show && item.data.length > 0,
-            )
+        const filteredSeriesList = ref([])
 
-            if (isSingleSeriesType.value) {
-                return list.slice(0, 1)
-            }
-            return list
-        })
+        const showDummyData = ref(false)
+        watch(
+            () => seriesList,
+            () => {
+                const list = seriesList.value.filter((item) => {
+                    return item.show && item.data.length > 0
+                })
+
+                if (isSingleSeriesType.value) {
+                    return list.slice(0, 1)
+                }
+
+                showDummyData.value = list.length === 0
+                filteredSeriesList.value = list
+            },
+            {
+                deep: true,
+                immediate: true,
+            },
+        )
+
+        // const filteredSeriesList = computed(() => {
+        //     console.log('filtering', seriesList.value[0]?.data?.length)
+        //     const list = seriesList.value.filter((item) => {
+        //         return item.show && item.data.length > 0
+        //     })
+
+        //     if (isSingleSeriesType.value) {
+        //         return list.slice(0, 1)
+        //     }
+
+        //     showDummyData.value = list.length === 0
+        //     return list
+        // })
+
+        const dummySeriesList = ref([])
+        dummySeriesList.value.push(createSeries())
+        dummySeriesList.value[0].name = 'Emissionen'
+        dummySeriesList.value[0].unit = 'Mio. t CO₂e'
+        dummySeriesList.value[0].data = dummyData.estEmissions
+        dummySeriesList.value[0].color = colorPalette.find(
+            (c) => c.key === 'blue.900',
+        )
+        dummySeriesList.value[0].type = 'bar'
+        dummySeriesList.value[0].style.fill = fillStyleOptions[1]
+
+        dummySeriesList.value.push(createSeries())
+        dummySeriesList.value[1].name = '1,5°C Pfad'
+        dummySeriesList.value[1].unit = 'Mio. t CO₂e'
+        dummySeriesList.value[1].data = dummyData.onePoint5Path
+        dummySeriesList.value[1].color = colorPalette.find(
+            (c) => c.key === 'yellow.600',
+        )
+        dummySeriesList.value[1].type = 'line'
+        dummySeriesList.value[1].style.fill = fillStyleOptions[1]
 
         // function convertSeries(series) {
         //     return {
@@ -170,11 +224,14 @@ export const useChartDataStore = defineStore(
         const chartOptions = computed(() => {
             console.log('update chartOptions')
             const opts = createChartDefaultOptions()
+            const refSeries = showDummyData.value
+                ? dummySeriesList.value
+                : filteredSeriesList.value
 
             opts.chart.type = type.value
 
             const typeCount = {}
-            filteredSeriesList.value.forEach((series) => {
+            refSeries.forEach((series) => {
                 typeCount[series.type] = (typeCount[series.type] || 0) + 1
             })
 
@@ -195,12 +252,17 @@ export const useChartDataStore = defineStore(
 
             opts.xaxis.labels.rotate = 0 - xAxis.value.angle.value
             opts.xaxis.labels.rotateAlways = xAxis.value.angle.value > 0
-            opts.xaxis.categories = [...xAxis.value.categories]
 
-            if (
-                xAxis.value.type.value === 'auto' &&
-                xAxis.value.categories.length
-            ) {
+            if (showDummyData.value) {
+                opts.xaxis.categories = dummyData.years.map((d) => '' + d)
+            } else {
+                console.log('options xAxis.categories', [
+                    ...xAxis.value.categories,
+                ])
+                opts.xaxis.categories = [...xAxis.value.categories]
+            }
+
+            if (xAxis.value.type.value === 'auto' && opts.xaxis.categories) {
                 opts.xaxis.type = 'category'
             } else {
                 opts.xaxis.type = 'datetime'
@@ -241,7 +303,7 @@ export const useChartDataStore = defineStore(
                 },
             }
 
-            filteredSeriesList.value.forEach((item, index) => {
+            refSeries.forEach((item, index) => {
                 // if (type.value === 'bar') {
                 // const width = item.type === 'bar' ? 1 : 2
                 // opts.stroke.width.push(width)
@@ -261,7 +323,7 @@ export const useChartDataStore = defineStore(
             })
 
             opts.customData = []
-            for (const item of filteredSeriesList.value) {
+            for (const item of refSeries) {
                 opts.customData.push({
                     name: item.name,
                     unit: item.unit,
@@ -283,32 +345,21 @@ export const useChartDataStore = defineStore(
             console.log('update chartSeries')
 
             if (isSingleSeriesType.value) {
-                if (filteredSeriesList.value.length === 0) {
+                if (showDummyData.value) {
                     dataSeries.push(...dummyData.estEmissions)
                 } else {
                     dataSeries.push(...filteredSeriesList.value[0].data)
                 }
             } else {
-                for (const item of filteredSeriesList.value) {
+                for (const item of showDummyData.value
+                    ? dummySeriesList.value
+                    : filteredSeriesList.value) {
                     dataSeries.push({
                         name: item.name,
                         data: [...item.data],
                         type: item.type === 'default' ? type.value : item.type,
                         color: item.color.hex,
                     })
-                }
-
-                if (!dataSeries.length) {
-                    dataSeries.push(
-                        {
-                            name: 'Emissionen',
-                            data: dummyData.estEmissions,
-                        },
-                        {
-                            name: '1,5°C Pfad ',
-                            data: dummyData.onePoint5Path,
-                        },
-                    )
                 }
             }
 
@@ -325,12 +376,6 @@ export const useChartDataStore = defineStore(
             },
             { immediate: true, deep: true },
         )
-        // const transformedData = computed(() => {
-        //     return {
-        //         options: chartOptions.value,
-        //         series: chartSeries.value,
-        //     }
-        // })
 
         function addSeries() {
             const lastSeries =
@@ -358,8 +403,16 @@ export const useChartDataStore = defineStore(
                 item.type = 'default'
             })
 
+            dummySeriesList.value.forEach((item) => {
+                item.type = 'default'
+            })
+
             if (preset.value === 'bar-line') {
                 seriesList.value.slice(1).forEach((item) => {
+                    item.type = 'line'
+                })
+
+                dummySeriesList.value.slice(1).forEach((item) => {
                     item.type = 'line'
                 })
             }
@@ -407,6 +460,7 @@ export const useChartDataStore = defineStore(
         return {
             // settings
             loading,
+            previewImage,
             width,
             title,
             description,
@@ -418,6 +472,9 @@ export const useChartDataStore = defineStore(
             forecast,
             type,
             seriesList,
+
+            // computed
+            showDummyData,
 
             // methods
             addSeries,

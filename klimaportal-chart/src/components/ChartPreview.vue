@@ -2,7 +2,6 @@
     <div
         class="chart-preview chart"
         :class="['width-' + chartData.width.value]"
-        :key="key"
     >
         <header v-if="!editable">
             <div class="title">
@@ -65,14 +64,25 @@
             @click="refresh"
         />
 
+        <q-badge
+            color="negative"
+            label="Dummy-Daten"
+            outline
+            :rounded="false"
+            v-if="chartData.showDummyData"
+            class="is-dummy-data"
+        />
+
         <div class="container">
             <apexchart
                 v-if="mounted && transformedData.options?.chart?.type"
                 ref="chart"
+                :key="key"
                 :type="transformedData.options?.chart?.type"
                 :options="transformedData.options"
                 :series="transformedData.series"
                 :height="transformedData.options?.chart?.height"
+                @animationEnd="updatePreviewImageDebounced"
             ></apexchart>
         </div>
 
@@ -100,6 +110,7 @@
 
 <script>
 import { useChartDataStore } from '@/stores/chart'
+import debounce from '@/tools/debounce'
 
 export default {
     props: {
@@ -125,6 +136,11 @@ export default {
         return {
             key: this.generateKey(),
             mounted: false,
+
+            updatePreviewImageDebounced: debounce(
+                () => this.updatePreviewImage,
+                2000,
+            ).fn,
         }
     },
 
@@ -153,6 +169,18 @@ export default {
             this.key = this.generateKey()
         },
 
+        updatePreviewImage() {
+            this.$refs.chart.chart
+                .dataURI({ width: 200 })
+                .then(({ imgURI }) => {
+                    console.info(
+                        'preview image generated',
+                        (imgURI.length / 1000).toFixed(1) + 'kb',
+                    )
+                    this.chartData.previewImage = imgURI
+                })
+        },
+
         handleInputBlur(key, ev) {
             setTimeout(() => {
                 if (this.chartData[key].show && !ev.srcElement.value.trim()) {
@@ -163,6 +191,16 @@ export default {
     },
 
     watch: {
+        'chartData.width.value'() {
+            // this.$nextTick(() => {
+            //     this.refresh()
+            // })
+
+            setTimeout(() => {
+                this.refresh()
+            }, 200)
+        },
+
         options: {
             handler(val) {
                 console.log('update chart options', JSON.stringify(val))
@@ -282,6 +320,13 @@ export default {
         position: absolute;
         right: 0.25rem;
         top: 0.25rem;
+        z-index: 10;
+    }
+
+    .q-badge.is-dummy-data {
+        position: absolute;
+        right: 3rem;
+        top: 0.75rem;
         z-index: 10;
     }
 }

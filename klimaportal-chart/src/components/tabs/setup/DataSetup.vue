@@ -286,7 +286,9 @@ export default {
         },
         'xAxis.data': {
             handler() {
-                this.chartData.xAxis.categories = this.xAxis.data
+                console.log('data-setup: xAxis.data', [...this.xAxis.data])
+                this.chartData.xAxis.categories.length = 0
+                this.chartData.xAxis.categories.push(...this.xAxis.data)
             },
             deep: true,
         },
