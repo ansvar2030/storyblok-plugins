@@ -73,17 +73,18 @@
             class="is-dummy-data"
         />
 
-        <div class="container">
+        <div :class="['container']">
             <apexchart
                 v-if="mounted && transformedData.options?.chart?.type"
                 ref="chart"
+                :class="transformedData.options?.classes"
                 :key="key"
                 :type="transformedData.options?.chart?.type"
                 :options="transformedData.options"
                 :series="transformedData.series"
                 :height="transformedData.options?.chart?.height"
                 @animationEnd="updatePreviewImageDebounced"
-                @updated="updatePreviewImageDebounced"
+                @updated="handleChartUpdate"
             ></apexchart>
         </div>
 
@@ -171,6 +172,88 @@ export default {
             this.key = this.generateKey()
         },
 
+        /*
+        <pattern
+            id="diagonal-hatch"
+            width="4"
+            height="4"
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(45)"
+        >
+            <rect
+                width="2"
+                height="4"
+                transform="translate(0,0)"
+                fill="white"
+            ></rect>
+        </pattern>
+        <mask id="diagonal-hatch-mask">
+            <rect
+                x="0"
+                y="0"
+                width="161"
+                height="100%"
+                fill="#fefefe"
+            />
+            <rect
+                x="161"
+                y="0"
+                width="100%"
+                height="100%"
+                fill="url(#diagonal-hatch)"
+            />
+        </mask>
+        */
+        createChartDefs() {
+            const chart = this.$refs.chart.chart
+            const chartId = chart.w.globals.chartID
+            const defs = chart.paper().defs()
+
+            console.log(chart)
+            // console.log(paper)
+            // console.log(paper.node.instance)
+            // console.log(chart.w.globals)
+            // console.log(chart.w.globals.dom.elForecastMask)
+
+            // const forecastRect =
+            //     chart.w.globals.dom.elForecastMask.children()[0]
+            // console.log(forecastRect)
+
+            defs.pattern(4, 4, function (add) {
+                add.rect(2, 4).fill('#fff')
+            }).attr({
+                id: 'diagonal-hatch-' + chartId,
+                patternUnits: 'userSpaceOnUse',
+                patternTransform: 'rotate(45)',
+            })
+
+            try {
+                const mask = document.createElementNS(
+                    chart.w.globals.SVGNS,
+                    'mask',
+                )
+                mask.setAttribute('id', 'diagonal-hatch-mask-' + chartId)
+                defs.node.appendChild(mask)
+                const svgjsMask = chart.paper(mask)
+                // const svgjsMask = chart.paper(mask)
+
+                svgjsMask.rect(161, '100%').fill('#fefefe')
+                svgjsMask.rect('100%', '100%').fill('url(#diagonal-hatch)')
+
+                console.log(svgjsMask)
+            } catch (error) {
+                console.log('😢', error.message)
+            }
+
+            return defs
+        },
+
+        handleChartUpdate() {
+            console.log('update')
+            this.updatePreviewImageDebounced()
+            this.createChartDefs()
+        },
+
         updatePreviewImage() {
             this.$refs.chart.chart
                 .dataURI({ scale: 0.66 })
@@ -216,6 +299,7 @@ export default {
     flex-flow: column;
     border: 1px solid #000;
     box-shadow: 10px 10px 0px 0px #000;
+    overflow: hidden;
 
     &.width {
         &-single {

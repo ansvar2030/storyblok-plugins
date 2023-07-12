@@ -269,6 +269,8 @@ export const useChartDataStore = defineStore(
             }
 
             opts.tooltip.shared = true
+            opts.tooltip.inverseOrder = stacked.value !== 'off'
+
             opts.tooltip.y.formatter = function (y, { seriesIndex, w }) {
                 const config = w?.config?.customData[seriesIndex] || {}
 
@@ -297,7 +299,7 @@ export const useChartDataStore = defineStore(
             opts.dataLabels = {
                 enabled: true,
                 enabledOnSeries: [],
-                formatter: (val, { seriesIndex, w }) => {
+                formatter: (val /*, { seriesIndex, w }*/) => {
                     // const config = w.config.customData[seriesIndex]
                     return isNaN(val) ? '' : val.toFixed(0)
                 },
@@ -321,6 +323,16 @@ export const useChartDataStore = defineStore(
                     opts.dataLabels.enabledOnSeries.push(index)
                 }
             })
+
+            opts.classes = [
+                {
+                    stacked: stacked.value !== 'off',
+                    forecast: forecast.value.count > 0,
+                },
+            ]
+            if (forecast.value.count > 0) {
+                opts.classes.push('forecast-' + forecast.value.count)
+            }
 
             opts.customData = []
             for (const item of refSeries) {

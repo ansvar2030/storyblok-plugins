@@ -194,6 +194,7 @@ header {
 
 .content {
     display: none;
+    overflow: hidden;
 }
 
 @include bp-lg {

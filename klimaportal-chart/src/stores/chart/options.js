@@ -473,8 +473,8 @@ export function createChartDefaultOptions() {
         // },
         forecastDataPoints: {
             count: 0,
-            fillOpacity: 0.5,
-            strokeWidth: undefined,
+            fillOpacity: 0.25,
+            strokeWidth: 1,
             dashArray: 5,
         },
         legend: {
@@ -499,6 +499,11 @@ export function createChartDefaultOptions() {
             enabled: true,
             shared: true,
             intersect: false,
+            inverseOrder: false,
+            fixed: {
+                enabled: true,
+                position: 'bottomRight',
+            },
             style: {
                 fontSize: '14px',
             },
@@ -529,6 +534,8 @@ export function createChartDefaultOptions() {
                         }
                     })
                     .filter(Boolean)
+
+                if (!list.length) return '<div></div>'
 
                 return (
                     '<ul>' +

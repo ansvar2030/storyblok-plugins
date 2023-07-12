@@ -45,7 +45,47 @@
         }
     }
 
-    .apexcharts-bar-area {
-        stroke-width: 1;
+    .vue-apexcharts {
+        &.stacked {
+
+            // thin stroke
+            .apexcharts-bar-area {
+                stroke-width: 1;
+                stroke-dasharray: 0;
+                // stroke-dasharray: 2 3;
+            }
+        }
+
+        &.forecast {
+            @for $i from 1 through 30 {
+                &-#{$i} {
+                    .apexcharts-bar-area {
+                        &:nth-last-child(-n + #{$i + 1}) {
+                            stroke-width: .5;
+                            stroke-dasharray: 2 3;
+                            stroke: #000;
+                            stroke-opacity: .75;
+                        }
+                    }
+                }
+            }
+        }
+
+        .apexcharts-line,
+        .apexcharts-area {
+            stroke-width: 1.5;
+        }
     }
+
+    // .apexcharts-bar-series {
+    //     .apexcharts-bar-area {
+    //         &:nth-child(n + 4) {
+    //             stroke-width: .5;
+    //             stroke-dasharray: 2 3;
+    //             stroke: #000;
+    //             stroke-opacity: .75;
+    //         }
+    //     }
+    // }
+
 }
