@@ -70,7 +70,7 @@ export default {
                     map-options
                     label="Stacking"
                     hint="Mehrere Datensätze können aufeinander gestapelt statt unter
-                    übereinander angezeigt werden."
+                    übereinander angezeigt werden. (Stacking 100% funktioniert nur mit Bars)"
                 />
 
                 <!-- <span class="hint">

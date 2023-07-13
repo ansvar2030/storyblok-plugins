@@ -253,20 +253,21 @@ export const useChartDataStore = defineStore(
             opts.xaxis.labels.rotate = 0 - xAxis.value.angle.value
             opts.xaxis.labels.rotateAlways = xAxis.value.angle.value > 0
 
+            console.log(
+                'options xAxis.categories',
+                xAxis.value.categories.length,
+            )
             if (showDummyData.value) {
                 opts.xaxis.categories = dummyData.years.map((d) => '' + d)
             } else {
-                console.log('options xAxis.categories', [
-                    ...xAxis.value.categories,
-                ])
                 opts.xaxis.categories = [...xAxis.value.categories]
             }
 
-            if (xAxis.value.type.value === 'auto' && opts.xaxis.categories) {
-                opts.xaxis.type = 'category'
-            } else {
-                opts.xaxis.type = 'datetime'
-            }
+            // if (xAxis.value.type.value === 'auto' && opts.xaxis.categories) {
+            //     opts.xaxis.type = 'category'
+            // } else {
+            opts.xaxis.type = 'datetime'
+            // }
 
             opts.tooltip.shared = true
             opts.tooltip.inverseOrder = stacked.value !== 'off'
@@ -324,16 +325,6 @@ export const useChartDataStore = defineStore(
                 }
             })
 
-            opts.classes = [
-                {
-                    stacked: stacked.value !== 'off',
-                    forecast: forecast.value.count > 0,
-                },
-            ]
-            if (forecast.value.count > 0) {
-                opts.classes.push('forecast-' + forecast.value.count)
-            }
-
             opts.customData = []
             for (const item of refSeries) {
                 opts.customData.push({
@@ -348,7 +339,7 @@ export const useChartDataStore = defineStore(
                     },
                 })
             }
-
+            console.log(opts)
             return opts
         })
 

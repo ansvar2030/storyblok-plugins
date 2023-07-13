@@ -412,10 +412,16 @@ export function createChartDefaultOptions() {
             labels: {
                 rotate: 0,
                 rotateAlways: true,
+                format: 'yyyy',
                 style: {
                     fontSize: '12px',
                     fontWeight: 500,
                 },
+            },
+
+            tooltip: {
+                enabled: true,
+                formatter: (d) => d && new Date(d).getFullYear(),
             },
         },
         yaxis: [
@@ -502,7 +508,9 @@ export function createChartDefaultOptions() {
             inverseOrder: false,
             fixed: {
                 enabled: true,
-                position: 'bottomRight',
+                position: 'topLeft',
+                offsetX: 58,
+                offsetY: 0,
             },
             style: {
                 fontSize: '14px',
@@ -518,6 +526,12 @@ export function createChartDefaultOptions() {
                 },
             },
             custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                const hiddenSeries = [
+                    ...w?.globals.dom.baseEl.querySelectorAll(
+                        '.apexcharts-series-collapsed',
+                    ),
+                ].map((el) => parseInt(el.getAttribute('data:realIndex'), 10))
+
                 const list = series
                     .map((s, index) => {
                         const config = w?.config?.customData[index] || {}
@@ -525,6 +539,7 @@ export function createChartDefaultOptions() {
                         if (s[dataPointIndex] === undefined) return false
 
                         return {
+                            index,
                             name: config?.name,
                             color: config?.color,
                             value: s[dataPointIndex].toFixed(
@@ -533,7 +548,9 @@ export function createChartDefaultOptions() {
                             unit: config?.unit,
                         }
                     })
-                    .filter(Boolean)
+                    .filter(
+                        (item) => item && !hiddenSeries.includes(item.index),
+                    )
 
                 if (!list.length) return '<div></div>'
 

@@ -286,9 +286,13 @@ export default {
         },
         'xAxis.data': {
             handler() {
-                console.log('data-setup: xAxis.data', [...this.xAxis.data])
-                this.chartData.xAxis.categories.length = 0
-                this.chartData.xAxis.categories.push(...this.xAxis.data)
+                // this.chartData.xAxis.categories.length = 0
+                this.chartData.xAxis.categories = [...this.xAxis.data]
+                console.log(
+                    'xAxis.data',
+                    this.xAxis.data.length,
+                    this.chartData.xAxis.categories.length,
+                )
             },
             deep: true,
         },

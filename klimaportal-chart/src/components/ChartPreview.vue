@@ -3,6 +3,7 @@
         class="chart-preview chart"
         :class="['width-' + chartData.width.value]"
     >
+        cats: {{ transformedData.options.xaxis?.categories }}
         <header v-if="!editable">
             <div class="title">
                 <h3 v-show="chartData.title?.show">
@@ -20,7 +21,6 @@
             <div class="title">
                 <q-input
                     v-model="chartData.title.value"
-                    label2="Titel"
                     ref="inputTitle"
                     :class="['input-title', { show: chartData.title?.show }]"
                     dense
@@ -36,7 +36,6 @@
             <div class="description">
                 <q-input
                     v-model="chartData.description.value"
-                    label2="Beschreibung"
                     ref="inputDescription"
                     :class="[
                         'input-description',
@@ -77,7 +76,7 @@
             <apexchart
                 v-if="mounted && transformedData.options?.chart?.type"
                 ref="chart"
-                :class="transformedData.options?.classes"
+                :class="classes"
                 :key="key"
                 :type="transformedData.options?.chart?.type"
                 :options="transformedData.options"
@@ -85,6 +84,7 @@
                 :height="transformedData.options?.chart?.height"
                 @animationEnd="updatePreviewImageDebounced"
                 @updated="handleChartUpdate"
+                @mounted="handleChartUpdate"
             ></apexchart>
         </div>
 
@@ -139,6 +139,13 @@ export default {
             key: this.generateKey(),
             mounted: false,
 
+            maxSeriesLength: 0,
+
+            createChartDefsDebounced: debounce(
+                () => this.createChartDefs(),
+                100,
+            ).fn,
+
             updatePreviewImageDebounced: debounce(
                 () =>
                     !this.chartData.showDummyData && this.updatePreviewImage(),
@@ -161,6 +168,24 @@ export default {
                 series: this.chartData.transformedData.series,
             }
         },
+
+        classes() {
+            const list = [
+                {
+                    stacked: this.chartData.stacked !== 'off',
+                    forecast: this.chartData.forecast.count > 0,
+                },
+            ]
+            console.log('max', this.maxSeriesLength)
+            if (this.chartData.forecast.count > 0) {
+                list.push(
+                    'forecast-' +
+                        (this.maxSeriesLength - this.chartData.forecast.count),
+                )
+            }
+
+            return list
+        },
     },
 
     methods: {
@@ -172,86 +197,163 @@ export default {
             this.key = this.generateKey()
         },
 
-        /*
-        <pattern
-            id="diagonal-hatch"
-            width="4"
-            height="4"
-            patternUnits="userSpaceOnUse"
-            patternTransform="rotate(45)"
-        >
-            <rect
-                width="2"
-                height="4"
-                transform="translate(0,0)"
-                fill="white"
-            ></rect>
-        </pattern>
-        <mask id="diagonal-hatch-mask">
-            <rect
-                x="0"
-                y="0"
-                width="161"
-                height="100%"
-                fill="#fefefe"
-            />
-            <rect
-                x="161"
-                y="0"
-                width="100%"
-                height="100%"
-                fill="url(#diagonal-hatch)"
-            />
-        </mask>
-        */
         createChartDefs() {
             const chart = this.$refs.chart.chart
             const chartId = chart.w.globals.chartID
-            const defs = chart.paper().defs()
+            console.log('createChartDefs', chart.w)
 
-            console.log(chart)
-            // console.log(paper)
-            // console.log(paper.node.instance)
-            // console.log(chart.w.globals)
-            // console.log(chart.w.globals.dom.elForecastMask)
+            const forecast = chart.w.config.forecastDataPoints
 
-            // const forecastRect =
-            //     chart.w.globals.dom.elForecastMask.children()[0]
-            // console.log(forecastRect)
+            // this.maxSeriesLength = chart.w.globals.seriesXvalues.reduce(
+            //     (max, arr) => Math.max(max, arr.length),
+            //     0,
+            // )
+            this.maxSeriesLength = Math.max(
+                this.transformedData.options.xaxis.categories.length,
+                chart.w.globals.dataPoints,
+            )
 
-            defs.pattern(4, 4, function (add) {
-                add.rect(2, 4).fill('#fff')
-            }).attr({
-                id: 'diagonal-hatch-' + chartId,
-                patternUnits: 'userSpaceOnUse',
-                patternTransform: 'rotate(45)',
+            // const maxLength = chart.w.globals.seriesXvalues.reduce(
+            //     (max, arr) => Math.max(max, arr.length),
+            //     0,
+            // )
+            // console.log(maxLength, this.maxSeriesLength)
+            // const length = this.transformedData.options.xaxis.categories.length
+            const forecastCutoffIndex = Math.max(
+                0,
+                this.maxSeriesLength - forecast.count,
+            )
+            // console.log(
+            //     chart.w.globals.seriesXvalues[0].length,
+            //     maxLength,
+            //     forecast.count,
+            //     forecastCutoffIndex,
+            // )
+
+            const Paper = chart.paper()
+            const defs = Paper.defs()
+
+            function addDiagonalHatchPattern(name = '', color = '') {
+                defs.pattern(4, 4, function (add) {
+                    add.rect(2, 4).fill(color || '#fff')
+                }).attr({
+                    id: 'diagonal-hatch-' + chartId + (name ? '-' + name : ''),
+                    patternUnits: 'userSpaceOnUse',
+                    patternTransform: 'rotate(45)',
+                })
+            }
+            addDiagonalHatchPattern()
+
+            chart.w.config.colors.forEach((color, index) => {
+                addDiagonalHatchPattern('c' + index, color)
             })
 
             try {
-                const mask = document.createElementNS(
+                // absolute mask
+                const forecastRect =
+                    chart.w.globals.dom.elForecastMask?.children?.[0]
+
+                if (forecastRect) {
+                    const x = forecastRect.x.baseVal.value
+                    const mask = document.createElementNS(
+                        chart.w.globals.SVGNS,
+                        'mask',
+                    )
+                    mask.setAttribute('id', 'diagonal-hatch-mask-' + chartId)
+                    Paper.defs().node.appendChild(mask)
+
+                    const sMask = Paper.select(
+                        'mask#diagonal-hatch-mask-' + chartId,
+                    ).members[0]
+
+                    const r1 = Paper.rect(x, '100%')
+                        .fill('#fefefe')
+                        .attr({ x: 0, y: 0 })
+                    const r2 = Paper.rect('100%', '100%')
+                        .fill('url(#diagonal-hatch-' + chartId + ')')
+                        .attr({ x: x, y: 0 })
+
+                    sMask.node.appendChild(r1.node)
+                    sMask.node.appendChild(r2.node)
+                }
+
+                // relative mask
+                const relMask = document.createElementNS(
                     chart.w.globals.SVGNS,
                     'mask',
                 )
-                mask.setAttribute('id', 'diagonal-hatch-mask-' + chartId)
-                defs.node.appendChild(mask)
-                const svgjsMask = chart.paper(mask)
-                // const svgjsMask = chart.paper(mask)
+                relMask.setAttribute('id', 'diagonal-hatch-rel-mask-' + chartId)
+                Paper.defs().node.appendChild(relMask)
 
-                svgjsMask.rect(161, '100%').fill('#fefefe')
-                svgjsMask.rect('100%', '100%').fill('url(#diagonal-hatch)')
+                const sRelMask = Paper.select(
+                    'mask#diagonal-hatch-rel-mask-' + chartId,
+                ).members[0]
 
-                console.log(svgjsMask)
+                const relRect = Paper.rect('50%', '50%')
+                    .fill('url(#diagonal-hatch-' + chartId + ')')
+                    .attr({ x: 10, y: 10 })
+                sRelMask.node.appendChild(relRect.node)
+
+                const paths = Paper.node.querySelectorAll(
+                    'g.apexcharts-area-series > .apexcharts-series > path:not([clip-path^="url(#forecast"]):not([clip-path^="url(#nonForecast"])',
+                )
+                for (const path of paths) {
+                    path.setAttribute(
+                        'mask',
+                        'url(#diagonal-hatch-mask-' + chartId + ')',
+                    )
+                }
+
+                const barGroups = Paper.node.querySelectorAll(
+                    'g.apexcharts-bar-series > .apexcharts-series',
+                )
+
+                for (const barGroup of barGroups) {
+                    const bars = barGroup.querySelectorAll(
+                        'path.apexcharts-bar-area:nth-child(n + ' +
+                            (forecastCutoffIndex + 1) +
+                            ')',
+                    )
+
+                    for (const path of bars) {
+                        const rgba = path.attributes.fill.value
+                        const color =
+                            '#' +
+                            rgba
+                                .slice(5)
+                                .split(',')
+                                .slice(0, 3)
+                                .map((c) =>
+                                    parseInt(c).toString(16).padStart(2, '0'),
+                                )
+                                .join('')
+
+                        const index = chart.w.config.colors.findIndex(
+                            (c) => c.toLowerCase() === color,
+                        )
+                        if (index === -1) {
+                            continue
+                        }
+
+                        path.setAttribute(
+                            'fill',
+                            'url(#diagonal-hatch-' +
+                                chartId +
+                                '-c' +
+                                index +
+                                ')',
+                        )
+                    }
+                }
             } catch (error) {
-                console.log('😢', error.message)
+                console.log('additional styling failed', error)
             }
-
-            return defs
         },
 
         handleChartUpdate() {
-            console.log('update')
+            // console.log('update')
             this.updatePreviewImageDebounced()
-            this.createChartDefs()
+            // this.createChartDefsDebounced()
         },
 
         updatePreviewImage() {
