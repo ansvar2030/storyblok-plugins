@@ -91,12 +91,11 @@
                         label="Typ"
                     />
                     <q-select
-                        v-show="chartData.xAxis.type.value === 'date'"
+                        v-show="chartData.xAxis.type.value === 'datetime'"
                         v-model="chartData.xAxis.dateFormat.value"
                         :options="dateFormats"
                         borderless
                         dense
-                        map-options
                         label="Datumsformat"
                     />
                     <!-- <q-select

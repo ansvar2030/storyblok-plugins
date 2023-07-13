@@ -141,10 +141,8 @@ export default {
 
             maxSeriesLength: 0,
 
-            createChartDefsDebounced: debounce(
-                () => this.createChartDefs(),
-                100,
-            ).fn,
+            createChartDefsDebounced: debounce(() => this.createChartDefs(), 50)
+                .fn,
 
             updatePreviewImageDebounced: debounce(
                 () =>
@@ -176,11 +174,12 @@ export default {
                     forecast: this.chartData.forecast.count > 0,
                 },
             ]
-            console.log('max', this.maxSeriesLength)
+
             if (this.chartData.forecast.count > 0) {
                 list.push(
                     'forecast-' +
-                        (this.maxSeriesLength - this.chartData.forecast.count),
+                        (this.chartData.seriesMaxLength -
+                            this.chartData.forecast.count),
                 )
             }
 
@@ -203,32 +202,10 @@ export default {
             console.log('createChartDefs', chart.w)
 
             const forecast = chart.w.config.forecastDataPoints
-
-            // this.maxSeriesLength = chart.w.globals.seriesXvalues.reduce(
-            //     (max, arr) => Math.max(max, arr.length),
-            //     0,
-            // )
-            this.maxSeriesLength = Math.max(
-                this.transformedData.options.xaxis.categories.length,
-                chart.w.globals.dataPoints,
-            )
-
-            // const maxLength = chart.w.globals.seriesXvalues.reduce(
-            //     (max, arr) => Math.max(max, arr.length),
-            //     0,
-            // )
-            // console.log(maxLength, this.maxSeriesLength)
-            // const length = this.transformedData.options.xaxis.categories.length
             const forecastCutoffIndex = Math.max(
                 0,
-                this.maxSeriesLength - forecast.count,
+                this.chartData.seriesMaxLength - forecast.count,
             )
-            // console.log(
-            //     chart.w.globals.seriesXvalues[0].length,
-            //     maxLength,
-            //     forecast.count,
-            //     forecastCutoffIndex,
-            // )
 
             const Paper = chart.paper()
             const defs = Paper.defs()
@@ -353,7 +330,7 @@ export default {
         handleChartUpdate() {
             // console.log('update')
             this.updatePreviewImageDebounced()
-            // this.createChartDefsDebounced()
+            this.createChartDefsDebounced()
         },
 
         updatePreviewImage() {

@@ -16,6 +16,7 @@ import {
 } from './options'
 
 import dummyData from '@/tools/dummy-data.js'
+import { isDateString, convertDateString } from '@/tools/date'
 
 // import { useFieldPlugin } from '@/useFieldPlugin'
 import { useSheetManagerStore } from '@/stores/sheet-manager'
@@ -147,14 +148,22 @@ export const useChartDataStore = defineStore(
         const seriesList = ref([])
         seriesList.value.push(createSeries())
         const filteredSeriesList = ref([])
+        const seriesMaxLength = ref(0)
 
         const showDummyData = ref(false)
         watch(
             () => seriesList,
             () => {
+                let maxLength = 0
                 const list = seriesList.value.filter((item) => {
+                    if (maxLength < item.data.length) {
+                        maxLength = item.data.length
+                    }
+
                     return item.show && item.data.length > 0
                 })
+
+                seriesMaxLength.value = maxLength
 
                 if (isSingleSeriesType.value) {
                     return list.slice(0, 1)
@@ -168,20 +177,6 @@ export const useChartDataStore = defineStore(
                 immediate: true,
             },
         )
-
-        // const filteredSeriesList = computed(() => {
-        //     console.log('filtering', seriesList.value[0]?.data?.length)
-        //     const list = seriesList.value.filter((item) => {
-        //         return item.show && item.data.length > 0
-        //     })
-
-        //     if (isSingleSeriesType.value) {
-        //         return list.slice(0, 1)
-        //     }
-
-        //     showDummyData.value = list.length === 0
-        //     return list
-        // })
 
         const dummySeriesList = ref([])
         dummySeriesList.value.push(createSeries())
@@ -222,7 +217,7 @@ export const useChartDataStore = defineStore(
         // }
 
         const chartOptions = computed(() => {
-            console.log('update chartOptions')
+            // console.log('update chartOptions')
             const opts = createChartDefaultOptions()
             const refSeries = showDummyData.value
                 ? dummySeriesList.value
@@ -257,16 +252,39 @@ export const useChartDataStore = defineStore(
                 'options xAxis.categories',
                 xAxis.value.categories.length,
             )
+
             if (showDummyData.value) {
                 opts.xaxis.categories = dummyData.years.map((d) => '' + d)
             } else {
-                opts.xaxis.categories = [...xAxis.value.categories]
+                let detectedType
+                if (xAxis.value.type.value === 'auto') {
+                    detectedType = xAxis.value.categories.find(
+                        (v) => v && !isDateString(v),
+                    )
+                        ? 'category'
+                        : 'datetime'
+                } else {
+                    detectedType = xAxis.value.type.value
+                }
+                console.log('type', detectedType)
+
+                opts.xaxis.type = detectedType
+
+                if (detectedType === 'datetime') {
+                    const dates = xAxis.value.categories.map((v) =>
+                        convertDateString(v),
+                    )
+                    opts.xaxis.categories = dates
+                    opts.xaxis.labels.format =
+                        xAxis.value.dateFormat.value.value
+                } else {
+                    opts.xaxis.categories = [...xAxis.value.categories]
+                }
             }
 
             // if (xAxis.value.type.value === 'auto' && opts.xaxis.categories) {
             //     opts.xaxis.type = 'category'
             // } else {
-            opts.xaxis.type = 'datetime'
             // }
 
             opts.tooltip.shared = true
@@ -275,7 +293,7 @@ export const useChartDataStore = defineStore(
             opts.tooltip.y.formatter = function (y, { seriesIndex, w }) {
                 const config = w?.config?.customData[seriesIndex] || {}
 
-                return isNaN(y)
+                return !y || isNaN(y)
                     ? ''
                     : y.toFixed(config?.tooltip?.precision) +
                           (config?.unit && ' ' + config?.unit)
@@ -302,7 +320,7 @@ export const useChartDataStore = defineStore(
                 enabledOnSeries: [],
                 formatter: (val /*, { seriesIndex, w }*/) => {
                     // const config = w.config.customData[seriesIndex]
-                    return isNaN(val) ? '' : val.toFixed(0)
+                    return !val || isNaN(val) ? '' : val.toFixed(0)
                 },
             }
 
@@ -345,7 +363,7 @@ export const useChartDataStore = defineStore(
 
         const chartSeries = computed(() => {
             const dataSeries = []
-            console.log('update chartSeries')
+            // console.log('update chartSeries')
 
             if (isSingleSeriesType.value) {
                 if (showDummyData.value) {
@@ -357,9 +375,20 @@ export const useChartDataStore = defineStore(
                 for (const item of showDummyData.value
                     ? dummySeriesList.value
                     : filteredSeriesList.value) {
+                    const data = [...item.data]
+                    if (seriesMaxLength.value - data.length > 0) {
+                        for (
+                            let i = data.length;
+                            i < seriesMaxLength.value;
+                            i++
+                        ) {
+                            data.push(null)
+                        }
+                    }
+
                     dataSeries.push({
                         name: item.name,
-                        data: [...item.data],
+                        data,
                         type: item.type === 'default' ? type.value : item.type,
                         color: item.color.hex,
                     })
@@ -375,7 +404,7 @@ export const useChartDataStore = defineStore(
             () => {
                 transformedData.value.options = chartOptions.value
                 transformedData.value.series = chartSeries.value
-                console.log('update transformedData')
+                // console.log('update transformedData')
             },
             { immediate: true, deep: true },
         )
@@ -478,6 +507,7 @@ export const useChartDataStore = defineStore(
 
             // computed
             showDummyData,
+            seriesMaxLength,
 
             // methods
             addSeries,

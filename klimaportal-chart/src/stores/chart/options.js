@@ -377,15 +377,26 @@ export const gridOptions = [
     },
 ]
 
-export const dateFormats = ['YYYY', 'MM.YYYY', 'DD.MM.YYYY']
+export const dateFormats = [
+    { label: 'YYYY', value: 'yyyy' },
+    { label: 'MM.YYYY', value: 'MM.yyyy' },
+    { label: 'DD.MM.YYYY', value: 'dd.MM.yyyy' },
+    { label: 'D.M.YYYY', value: 'd.M.yyyy' },
+    { label: 'MMM', value: 'MMM' },
+    { label: 'MMM YY', value: 'MMM yy' },
+]
 export const dataTypeOptions = [
     {
         value: 'auto',
         label: 'Auto',
     },
     {
-        value: 'date',
+        value: 'datetime',
         label: 'Datum',
+    },
+    {
+        value: 'category',
+        label: 'Kategorie',
     },
 ]
 
@@ -412,6 +423,7 @@ export function createChartDefaultOptions() {
             labels: {
                 rotate: 0,
                 rotateAlways: true,
+                hideOverlappingLabels: false,
                 format: 'yyyy',
                 style: {
                     fontSize: '12px',
@@ -536,7 +548,8 @@ export function createChartDefaultOptions() {
                     .map((s, index) => {
                         const config = w?.config?.customData[index] || {}
 
-                        if (s[dataPointIndex] === undefined) return false
+                        if (!s[dataPointIndex] || isNaN(s[dataPointIndex]))
+                            return false
 
                         return {
                             index,
