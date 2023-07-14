@@ -497,7 +497,7 @@ export function createChartDefaultOptions() {
                         return value
                     }
 
-                    const format = w.config.xaxis.labels.format
+                    const { format = 'yyyy' } = w.config.xaxis.labels
                     const d = DateTime.prototype.getDate.call({ w }, value)
                     return DateTime.prototype.formatDate.call({ w }, d, format)
                 },
