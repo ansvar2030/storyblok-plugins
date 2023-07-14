@@ -227,6 +227,10 @@ export default {
                 const tooltipX = chart.w.globals.translateX
                 chart.w.config.tooltip.fixed.offsetX = tooltipX
 
+                if (forecast.count === 0) {
+                    return
+                }
+
                 // create patterns
                 this.addDiagonalHatchPattern(defs, chartId)
 
@@ -271,6 +275,7 @@ export default {
                     'g.apexcharts-area-series > .apexcharts-series > path:not([clip-path^="url(#forecast"]):not([clip-path^="url(#nonForecast"])',
                 )
                 for (const path of paths) {
+                    path.style.fillOpacity = forecast.fillOpacity
                     path.setAttribute(
                         'mask',
                         'url(#diagonal-hatch-mask-' + chartId + ')',
@@ -309,6 +314,8 @@ export default {
                             continue
                         }
 
+                        path.classList.add('forecast')
+
                         path.setAttribute(
                             'fill',
                             'url(#diagonal-hatch-' +
@@ -320,7 +327,7 @@ export default {
                     }
                 }
             } catch (error) {
-                console.log('additional styling failed', error)
+                console.warn('additional styling failed', error)
             }
         },
 
@@ -335,7 +342,7 @@ export default {
 
         updatePreviewImage() {
             this.$refs.chart.chart
-                .dataURI({ scale: 0.66 })
+                .dataURI({ scale: 0.5 })
                 .then(({ imgURI }) => {
                     console.info(
                         'preview image generated',
@@ -361,12 +368,12 @@ export default {
             }, 200)
         },
 
-        options: {
-            handler(val) {
-                console.log('update chart options', JSON.stringify(val))
-            },
-            deep: true,
-        },
+        // options: {
+        //     handler(val) {
+        //         console.log('update chart options', JSON.stringify(val))
+        //     },
+        //     deep: true,
+        // },
     },
 }
 </script>

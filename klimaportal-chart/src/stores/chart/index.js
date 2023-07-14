@@ -254,6 +254,8 @@ export const useChartDataStore = defineStore(
 
             if (showDummyData.value) {
                 opts.xaxis.categories = dummyData.years.map((d) => '' + d)
+                opts.xaxis.type = 'datetime'
+                opts.xaxis.labels.format = xAxis.value.dateFormat.value.value
             } else {
                 opts.xaxis.type = detectedXAxisType.value
 
@@ -274,7 +276,9 @@ export const useChartDataStore = defineStore(
 
             function formatWrapper(data) {
                 return function (value, tickIndex, w) {
-                    return value.toFixed(data.precision).replace('.', ',')
+                    return (
+                        value && value.toFixed(data.precision).replace('.', ',')
+                    )
                 }
             }
 
@@ -304,11 +308,20 @@ export const useChartDataStore = defineStore(
             })
 
             if (opts.yaxis.length === 0) {
-                opts.yaxis.push(defaultYAxis)
+                opts.yaxis.push({
+                    ...defaultYAxis,
+                    labels: {
+                        formatter: formatWrapper({ precision: 0 }),
+                        style: {
+                            ...defaultYAxis.labels.style,
+                        },
+                    },
+                })
             }
 
             opts.tooltip.shared = true
             opts.tooltip.inverseOrder = stacked.value !== 'off'
+            opts.legend.inverseOrder = stacked.value !== 'off'
 
             opts.tooltip.y.formatter = function (y, { seriesIndex, w }) {
                 const config = w?.config?.customData[seriesIndex] || {}
@@ -333,7 +346,11 @@ export const useChartDataStore = defineStore(
                 type: [],
             }
 
-            opts.forecastDataPoints.count = forecast.value.count
+            if (showDummyData.value) {
+                opts.forecastDataPoints.count = 0
+            } else {
+                opts.forecastDataPoints.count = forecast.value.count
+            }
 
             opts.dataLabels = {
                 enabled: true,

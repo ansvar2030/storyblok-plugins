@@ -385,7 +385,7 @@ export const dateFormats = [
     { label: 'DD.MM.YYYY', value: 'dd.MM.yyyy' },
     { label: 'D.M.YYYY', value: 'd.M.yyyy' },
     { label: 'MMM', value: 'MMM' },
-    { label: 'MMM YY', value: 'MMM yy' },
+    { label: "MMM 'YY", value: "MMM 'yy" },
 ]
 export const dataTypeOptions = [
     {
@@ -561,12 +561,13 @@ export function createChartDefaultOptions() {
         },
         forecastDataPoints: {
             count: 0,
-            fillOpacity: 0.25,
+            fillOpacity: 0.35,
             strokeWidth: 1,
             dashArray: 5,
         },
         legend: {
             horizontalAlign: 'left',
+            inverseOrder: false,
             // offsetY: 10,
             // offsetX: 0,
             fontSize: '14px',
@@ -625,9 +626,9 @@ export function createChartDefaultOptions() {
                             index,
                             name: config?.name,
                             color: config?.color,
-                            value: s[dataPointIndex].toFixed(
-                                config?.tooltip?.precision,
-                            ),
+                            value: s[dataPointIndex]
+                                .toFixed(config?.tooltip?.precision)
+                                .replace('.', ','),
                             unit: config?.tooltip.unit || config?.unit,
                         }
                     })
@@ -635,7 +636,13 @@ export function createChartDefaultOptions() {
                         (item) => item && !hiddenSeries.includes(item.index),
                     )
 
-                if (!list.length) return '<div></div>'
+                if (!list.length) {
+                    return '<div></div>'
+                }
+
+                if (w.config.tooltip.inverseOrder) {
+                    list.reverse()
+                }
 
                 return (
                     '<ul>' +
