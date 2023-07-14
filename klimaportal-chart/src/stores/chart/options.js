@@ -592,7 +592,7 @@ export function createChartDefaultOptions() {
             fixed: {
                 enabled: true,
                 position: 'topLeft',
-                offsetX: 58,
+                offsetX: 0,
                 offsetY: 0,
             },
             style: {
@@ -610,16 +610,19 @@ export function createChartDefaultOptions() {
             },
             custom: function ({ series, seriesIndex, dataPointIndex, w }) {
                 const hiddenSeries = [
-                    ...w?.globals.dom.baseEl.querySelectorAll(
+                    ...(w?.globals.dom.baseEl.querySelectorAll(
                         '.apexcharts-series-collapsed',
-                    ),
+                    ) || []),
                 ].map((el) => parseInt(el.getAttribute('data:realIndex'), 10))
 
                 const list = series
                     .map((s, index) => {
                         const config = w?.config?.customData[index] || {}
 
-                        if (!s[dataPointIndex] || isNaN(s[dataPointIndex]))
+                        if (
+                            !s[dataPointIndex] ||
+                            Number.isNaN(s[dataPointIndex])
+                        )
                             return false
 
                         return {

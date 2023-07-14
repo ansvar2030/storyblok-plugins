@@ -140,8 +140,6 @@ export default {
 
             enableAdditionalStyling: true,
 
-            maxSeriesLength: 0,
-
             addAdditionalStylingDebounced: debounce(
                 () => this.addAdditionalStyling(),
                 50,
@@ -211,10 +209,11 @@ export default {
 
         addAdditionalStyling() {
             const chart = this.$refs.chart.chart
-            const chartId = chart.w.globals.chartID
+            const { config, globals } = chart.w
+            const chartId = globals.chartID
 
             try {
-                const forecast = chart.w.config.forecastDataPoints
+                const forecast = config.forecastDataPoints
                 const forecastCutoffIndex = Math.max(
                     0,
                     this.chartData.seriesMaxLength - forecast.count,
@@ -224,8 +223,11 @@ export default {
                 const defs = Paper.defs()
 
                 // position fixed tooltip
-                const tooltipX = chart.w.globals.translateX
-                chart.w.config.tooltip.fixed.offsetX = tooltipX
+                if (config.tooltip.fixed.enabled) {
+                    const tooltipX =
+                        globals.translateX - globals.barPadForNumericAxis
+                    config.tooltip.fixed.offsetX = tooltipX
+                }
 
                 if (forecast.count === 0) {
                     return
@@ -234,7 +236,7 @@ export default {
                 // create patterns
                 this.addDiagonalHatchPattern(defs, chartId)
 
-                chart.w.config.colors.forEach((color, index) => {
+                config.colors.forEach((color, index) => {
                     this.addDiagonalHatchPattern(
                         defs,
                         chartId,
@@ -243,15 +245,11 @@ export default {
                     )
                 })
                 // white stripes mask
-                const forecastRect =
-                    chart.w.globals.dom.elForecastMask?.children?.[0]
+                const forecastRect = globals.dom.elForecastMask?.children?.[0]
 
                 if (forecastRect) {
                     const x = forecastRect.x.baseVal.value
-                    const mask = document.createElementNS(
-                        chart.w.globals.SVGNS,
-                        'mask',
-                    )
+                    const mask = document.createElementNS(globals.SVGNS, 'mask')
                     mask.setAttribute('id', 'diagonal-hatch-mask-' + chartId)
                     Paper.defs().node.appendChild(mask)
 
@@ -260,10 +258,13 @@ export default {
                     ).members[0]
 
                     const r1 = Paper.rect(x, '100%')
-                        .fill('#fefefe')
+                        .fill('#fff')
                         .attr({ x: 0, y: 0 })
                     const r2 = Paper.rect('100%', '100%')
-                        .fill('url(#diagonal-hatch-' + chartId + ')')
+                        .fill({
+                            color: 'url(#diagonal-hatch-' + chartId + ')',
+                            opacity: forecast.fillOpacity,
+                        })
                         .attr({ x: x, y: 0 })
 
                     sMask.node.appendChild(r1.node)
@@ -275,11 +276,9 @@ export default {
                     'g.apexcharts-area-series > .apexcharts-series > path:not([clip-path^="url(#forecast"]):not([clip-path^="url(#nonForecast"])',
                 )
                 for (const path of paths) {
-                    path.style.fillOpacity = forecast.fillOpacity
-                    path.setAttribute(
-                        'mask',
-                        'url(#diagonal-hatch-mask-' + chartId + ')',
-                    )
+                    path.style.fillOpacity = 1
+                    path.style.mask =
+                        'url(#diagonal-hatch-mask-' + chartId + ')'
                 }
 
                 // apply patterns to bars
@@ -307,7 +306,7 @@ export default {
                                 )
                                 .join('')
 
-                        const index = chart.w.config.colors.findIndex(
+                        const index = config.colors.findIndex(
                             (c) => c.toLowerCase() === color,
                         )
                         if (index === -1) {
@@ -315,15 +314,12 @@ export default {
                         }
 
                         path.classList.add('forecast')
-
-                        path.setAttribute(
-                            'fill',
+                        path.style.fill =
                             'url(#diagonal-hatch-' +
-                                chartId +
-                                '-c' +
-                                index +
-                                ')',
-                        )
+                            chartId +
+                            '-c' +
+                            index +
+                            ')'
                     }
                 }
             } catch (error) {
@@ -332,7 +328,6 @@ export default {
         },
 
         handleChartUpdate() {
-            // console.log('update')
             this.updatePreviewImageDebounced()
 
             if (this.enableAdditionalStyling) {
@@ -367,13 +362,6 @@ export default {
                 this.refresh()
             }, 200)
         },
-
-        // options: {
-        //     handler(val) {
-        //         console.log('update chart options', JSON.stringify(val))
-        //     },
-        //     deep: true,
-        // },
     },
 }
 </script>
@@ -385,7 +373,6 @@ export default {
     flex-flow: column;
     border: 1px solid #000;
     box-shadow: 10px 10px 0px 0px #000;
-    overflow: hidden;
 
     &.width {
         &-single {

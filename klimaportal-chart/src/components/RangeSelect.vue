@@ -277,7 +277,7 @@ export default {
         },
 
         loadRangeData(range, force = false) {
-            console.log('loadRangeData', range, force, this.loadedRange)
+            console.log('load range data', range) //, force, this.loadedRange)
             if (!range || (!force && this.loadedRange === range)) {
                 return
             }

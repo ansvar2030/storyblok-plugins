@@ -247,10 +247,7 @@ export const useChartDataStore = defineStore(
             opts.xaxis.labels.rotate = 0 - xAxis.value.angle.value
             opts.xaxis.labels.rotateAlways = xAxis.value.angle.value > 0
 
-            console.log(
-                'options xAxis.categories',
-                xAxis.value.categories.length,
-            )
+            console.log('options xAxis.categories', [...xAxis.value.categories])
 
             if (showDummyData.value) {
                 opts.xaxis.categories = dummyData.years.map((d) => '' + d)
@@ -320,13 +317,14 @@ export const useChartDataStore = defineStore(
             }
 
             opts.tooltip.shared = true
+            opts.tooltip.fixed.enabled = width.value.value === 'double'
             opts.tooltip.inverseOrder = stacked.value !== 'off'
             opts.legend.inverseOrder = stacked.value !== 'off'
 
             opts.tooltip.y.formatter = function (y, { seriesIndex, w }) {
                 const config = w?.config?.customData[seriesIndex] || {}
 
-                return !y || isNaN(y)
+                return !y || Number.isNaN(y)
                     ? ''
                     : y.toFixed(config?.tooltip?.precision) +
                           (config?.unit && ' ' + config?.unit)
@@ -355,9 +353,8 @@ export const useChartDataStore = defineStore(
             opts.dataLabels = {
                 enabled: true,
                 enabledOnSeries: [],
-                formatter: (val /*, { seriesIndex, w }*/) => {
-                    // const config = w.config.customData[seriesIndex]
-                    return !val || isNaN(val) ? '' : val.toFixed(0)
+                formatter: (val) => {
+                    return !val || Number.isNaN(val) ? '' : val.toFixed(0)
                 },
             }
 

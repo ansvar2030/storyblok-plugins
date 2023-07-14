@@ -58,6 +58,7 @@ export default {
     grid-template-rows: min-content min-content 1fr;
     gap: var(--k-gap);
     padding: 0;
+    overflow: hidden;
 }
 
 .presets {
