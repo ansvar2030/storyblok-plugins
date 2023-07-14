@@ -106,6 +106,22 @@ export default {
                     Welche Datenpunkte sollen als Schätzung dargestellt werden?
                 </span>
             </div>
+
+            <div class="row">
+                <q-field
+                    label="Marker anzeigen"
+                    borderless
+                    model-value=" "
+                    hint="Zeige Kreise auf den Datenpunkten bei 'Line' und 'Area' an."
+                >
+                    <q-toggle v-model="chartData.markers.show" />
+                </q-field>
+
+                <!-- <span class="hint">
+                Mehrere Datensätze können aufeinander gestapelt statt unter
+                übereinander angezeigt werden.
+            </span> -->
+            </div>
         </div>
 
         <div class="series-data">
@@ -143,7 +159,8 @@ header {
     }
 
     .q-btn,
-    .q-select {
+    .q-select,
+    .q-field {
         width: 100%;
         margin-bottom: 0.5rem;
     }

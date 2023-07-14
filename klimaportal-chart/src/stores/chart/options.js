@@ -1,3 +1,5 @@
+import DateTime from 'apexcharts/src/utils/DateTime.js'
+
 export const stackedOptions = [
     {
         label: 'Aus',
@@ -400,6 +402,62 @@ export const dataTypeOptions = [
     },
 ]
 
+const de = {
+    name: 'de',
+    options: {
+        months: [
+            'Januar',
+            'Februar',
+            'März',
+            'April',
+            'Mai',
+            'Juni',
+            'Juli',
+            'August',
+            'September',
+            'Oktober',
+            'November',
+            'Dezember',
+        ],
+        shortMonths: [
+            'Jan',
+            'Feb',
+            'Mär',
+            'Apr',
+            'Mai',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Okt',
+            'Nov',
+            'Dez',
+        ],
+        days: [
+            'Sonntag',
+            'Montag',
+            'Dienstag',
+            'Mittwoch',
+            'Donnerstag',
+            'Freitag',
+            'Samstag',
+        ],
+        shortDays: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+        toolbar: {
+            exportToSVG: 'SVG speichern',
+            exportToPNG: 'PNG speichern',
+            exportToCSV: 'CSV speichern',
+            menu: 'Menü',
+            selection: 'Auswahl',
+            selectionZoom: 'Auswahl vergrößern',
+            zoomIn: 'Vergrößern',
+            zoomOut: 'Verkleinern',
+            pan: 'Verschieben',
+            reset: 'Zoom zurücksetzen',
+        },
+    },
+}
+
 export function createChartDefaultOptions() {
     return {
         chart: {
@@ -411,7 +469,8 @@ export function createChartDefaultOptions() {
                 show: false,
             },
             height: 272,
-            // defaultLocale: 'de',
+            locales: [de],
+            defaultLocale: 'de',
             fontFamily: 'Satoshi, sans-serif',
             background: '#fff',
         },
@@ -423,7 +482,7 @@ export function createChartDefaultOptions() {
             labels: {
                 rotate: 0,
                 rotateAlways: true,
-                hideOverlappingLabels: false,
+                hideOverlappingLabels: true,
                 format: 'yyyy',
                 style: {
                     fontSize: '12px',
@@ -433,7 +492,15 @@ export function createChartDefaultOptions() {
 
             tooltip: {
                 enabled: true,
-                formatter: (d) => d && new Date(d).getFullYear(),
+                formatter(value, { w }) {
+                    if (w.config.xaxis.type !== 'datetime') {
+                        return value
+                    }
+
+                    const format = w.config.xaxis.labels.format
+                    const d = DateTime.prototype.getDate.call({ w }, value)
+                    return DateTime.prototype.formatDate.call({ w }, d, format)
+                },
             },
         },
         yaxis: [
@@ -442,11 +509,14 @@ export function createChartDefaultOptions() {
                     show: false,
                 },
                 labels: {
-                    formatter: function (value) {
-                        return Math.round(value)
-                    },
                     style: {
                         fontSize: '12px',
+                        fontWeight: 500,
+                    },
+                },
+                title: {
+                    style: {
+                        fontSize: '15px',
                         fontWeight: 500,
                     },
                 },
@@ -476,19 +546,19 @@ export function createChartDefaultOptions() {
             type: 'solid',
             opacity: [1, 0.25],
         },
-        // markers: {
-        //     size: 8,
-        //     shape: 'rect',
-        //     radius: 0,
-        //     fillOpacity: 1,
-        //     strokeColors: '#fff',
-        //     strokeWidth: 2,
-        //     strokeOpacity: 1,
-        //     strokeDashArray: 0,
-        //     hover: {
-        //         size: 8,
-        //     },
-        // },
+        markers: {
+            size: 0,
+            // shape: 'circle',
+            // radius: 0,
+            fillOpacity: 1,
+            strokeColors: '#fff',
+            strokeWidth: 2,
+            strokeOpacity: 1,
+            // strokeDashArray: 0,
+            hover: {
+                size: 6,
+            },
+        },
         forecastDataPoints: {
             count: 0,
             fillOpacity: 0.25,
@@ -558,7 +628,7 @@ export function createChartDefaultOptions() {
                             value: s[dataPointIndex].toFixed(
                                 config?.tooltip?.precision,
                             ),
-                            unit: config?.unit,
+                            unit: config?.tooltip.unit || config?.unit,
                         }
                     })
                     .filter(

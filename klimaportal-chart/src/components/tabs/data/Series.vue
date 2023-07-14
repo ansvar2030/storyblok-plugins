@@ -139,7 +139,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="option">
+                        <div class="option unit">
                             <q-select
                                 label="Einheit"
                                 :model-value="item.unit"
@@ -180,6 +180,7 @@
                             >
                                 <q-toggle v-model="item.dataLabel" />
                             </q-field>
+
                             <q-field
                                 label="Sichtbarkeit"
                                 borderless
@@ -208,11 +209,133 @@
                         </div>
                     </div>
 
-                    <!-- <q-separator />
-                    <div class="row">tooltip</div>
+                    <q-separator />
+                    <h5>Tooltip</h5>
+                    <div class="row">
+                        <div class="option unit">
+                            <q-select
+                                label="Tooltip Einheit"
+                                :model-value="item.tooltip.unit"
+                                emit-value
+                                use-input
+                                hide-selected
+                                fill-input
+                                :options="unitOptions"
+                                options-dense
+                                @blur="
+                                    (ev) =>
+                                        (item.tooltip.unit = ev.target.value)
+                                "
+                                ><template v-slot:option="scope">
+                                    <q-item-label
+                                        header
+                                        v-if="scope.opt.group"
+                                        v-bind="scope.itemProps"
+                                        >{{ scope.opt.group }}</q-item-label
+                                    >
+                                    <q-item
+                                        v-else
+                                        v-bind="scope.itemProps"
+                                        v-on="scope"
+                                    >
+                                        <q-item-section>
+                                            <q-item-label>{{
+                                                scope.opt.label
+                                            }}</q-item-label>
+                                        </q-item-section>
+                                    </q-item>
+                                </template></q-select
+                            >
+                        </div>
+
+                        <div class="option">
+                            <q-select
+                                v-model="item.tooltip.precision"
+                                :options="[0, 1, 2, 3]"
+                                label="Präzision"
+                            ></q-select>
+                        </div>
+                    </div>
 
                     <q-separator />
-                    <div class="row">yAxis</div> -->
+                    <h5>Y-Achse</h5>
+                    <div class="row">
+                        <div class="option toggles">
+                            <q-field
+                                label="Einstellen"
+                                borderless
+                                model-value=" "
+                            >
+                                <q-toggle v-model="item.yAxis.separate" />
+                            </q-field>
+                        </div>
+
+                        <div class="option">
+                            <q-input
+                                label="Titel"
+                                :modelValue="item.yAxis.title"
+                                @change="(value) => (item.yAxis.title = value)"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="option">
+                            <q-select
+                                v-model="item.yAxis.position"
+                                :options="[
+                                    { value: 'left', label: 'links' },
+                                    { value: 'right', label: 'rechts' },
+                                ]"
+                                emit-value
+                                map-options
+                                label="Position"
+                            ></q-select>
+                        </div>
+
+                        <!-- <div class="option unit">
+                            <q-select
+                                label="Einheit"
+                                :model-value="item.yAxis.unit"
+                                emit-value
+                                use-input
+                                hide-selected
+                                fill-input
+                                :options="unitOptions"
+                                options-dense
+                                @blur="
+                                    (ev) => (item.yAxis.unit = ev.target.value)
+                                "
+                                ><template v-slot:option="scope">
+                                    <q-item-label
+                                        header
+                                        v-if="scope.opt.group"
+                                        v-bind="scope.itemProps"
+                                        >{{ scope.opt.group }}</q-item-label
+                                    >
+                                    <q-item
+                                        v-else
+                                        v-bind="scope.itemProps"
+                                        v-on="scope"
+                                    >
+                                        <q-item-section>
+                                            <q-item-label>{{
+                                                scope.opt.label
+                                            }}</q-item-label>
+                                        </q-item-section>
+                                    </q-item>
+                                </template></q-select
+                            >
+                        </div> -->
+
+                        <div class="option">
+                            <q-select
+                                v-model="item.yAxis.precision"
+                                :options="[0, 1, 2, 3]"
+                                label="Präzision"
+                            ></q-select>
+                        </div>
+                    </div>
 
                     <q-separator />
                     <div class="actions">
@@ -373,10 +496,16 @@ export default {
 .settings {
     display: flex;
     flex-flow: column;
-    gap: var(--k-gap);
+    gap: 0.75rem;
     padding: 0 1.5rem 1.5rem;
     // justify-content:space-between;
     border-bottom: 1px solid #000;
+
+    h5 {
+        grid-column: span 2;
+        font-size: 0.875rem;
+        line-height: 1;
+    }
 
     > .row {
         display: grid;
@@ -389,6 +518,12 @@ export default {
         &.bottom {
             display: flex;
             align-items: flex-end;
+        }
+
+        &.unit {
+            .q-field {
+                width: 7rem;
+            }
         }
 
         &.toggles {

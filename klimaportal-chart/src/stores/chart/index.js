@@ -77,6 +77,16 @@ export const useChartDataStore = defineStore(
         xAxis.value.type.value = dataTypeOptions[0].value
         xAxis.value.dateFormat.value = dateFormats[0]
 
+        const detectedXAxisType = computed(() => {
+            if (xAxis.value.type.value === 'auto') {
+                return xAxis.value.categories.find((v) => v && !isDateString(v))
+                    ? 'category'
+                    : 'datetime'
+            } else {
+                return xAxis.value.type.value
+            }
+        })
+
         const type = ref('')
         type.value = chartTypeOptions[0].value
 
@@ -89,6 +99,10 @@ export const useChartDataStore = defineStore(
 
         const forecast = ref({
             count: 0,
+        })
+
+        const markers = ref({
+            show: false,
         })
 
         let createSeriesCount = 1
@@ -119,8 +133,9 @@ export const useChartDataStore = defineStore(
                 },
                 yAxis: {
                     separate: false,
+                    title: '',
                     position: 'left',
-                    format: '',
+                    unit: '',
                     precision: 0,
                 },
             }
@@ -151,6 +166,7 @@ export const useChartDataStore = defineStore(
         const seriesMaxLength = ref(0)
 
         const showDummyData = ref(false)
+
         watch(
             () => seriesList,
             () => {
@@ -199,23 +215,6 @@ export const useChartDataStore = defineStore(
         dummySeriesList.value[1].type = 'line'
         dummySeriesList.value[1].style.fill = fillStyleOptions[1]
 
-        // function convertSeries(series) {
-        //     return {
-        //         name: series.name + ' ' + series.unit,
-        //         data: [...series.data], //series.data.map((d) => d),
-        //         type: 'line',
-        //         // unit: series.unit,
-        //         color: series.color.hex,
-        //         // style: series.style.value,
-        //         // dataLabel: series.dataLabel.value,
-        //         // tooltip: {
-        //         //     precision: series.tooltip.precision,
-        //         //     //         show: series.tooltip.show,
-        //         //     //         formatter: (v) => Math.round(v) + series.unit,
-        //         // },
-        //     }
-        // }
-
         const chartOptions = computed(() => {
             // console.log('update chartOptions')
             const opts = createChartDefaultOptions()
@@ -256,21 +255,9 @@ export const useChartDataStore = defineStore(
             if (showDummyData.value) {
                 opts.xaxis.categories = dummyData.years.map((d) => '' + d)
             } else {
-                let detectedType
-                if (xAxis.value.type.value === 'auto') {
-                    detectedType = xAxis.value.categories.find(
-                        (v) => v && !isDateString(v),
-                    )
-                        ? 'category'
-                        : 'datetime'
-                } else {
-                    detectedType = xAxis.value.type.value
-                }
-                console.log('type', detectedType)
+                opts.xaxis.type = detectedXAxisType.value
 
-                opts.xaxis.type = detectedType
-
-                if (detectedType === 'datetime') {
+                if (detectedXAxisType.value === 'datetime') {
                     const dates = xAxis.value.categories.map((v) =>
                         convertDateString(v),
                     )
@@ -282,10 +269,43 @@ export const useChartDataStore = defineStore(
                 }
             }
 
-            // if (xAxis.value.type.value === 'auto' && opts.xaxis.categories) {
-            //     opts.xaxis.type = 'category'
-            // } else {
-            // }
+            const defaultYAxis = opts.yaxis[0]
+            opts.yaxis = []
+
+            function formatWrapper(data) {
+                return function (value, tickIndex, w) {
+                    return value.toFixed(data.precision).replace('.', ',')
+                }
+            }
+
+            refSeries.forEach((series) => {
+                if (!series.yAxis.separate) {
+                    return
+                }
+
+                opts.yaxis.push({
+                    ...defaultYAxis,
+                    seriesName: series.name,
+                    opposite: series.yAxis.position === 'right',
+                    decimalsInFloat: series.yAxis.precision,
+                    title: {
+                        text: series.yAxis.title,
+                        style: {
+                            ...defaultYAxis.title.style,
+                        },
+                    },
+                    labels: {
+                        formatter: formatWrapper(series.yAxis),
+                        style: {
+                            ...defaultYAxis.labels.style,
+                        },
+                    },
+                })
+            })
+
+            if (opts.yaxis.length === 0) {
+                opts.yaxis.push(defaultYAxis)
+            }
 
             opts.tooltip.shared = true
             opts.tooltip.inverseOrder = stacked.value !== 'off'
@@ -324,6 +344,10 @@ export const useChartDataStore = defineStore(
                 },
             }
 
+            if (markers.value.show) {
+                opts.markers.size = 6
+            }
+
             refSeries.forEach((item, index) => {
                 // if (type.value === 'bar') {
                 // const width = item.type === 'bar' ? 1 : 2
@@ -351,13 +375,12 @@ export const useChartDataStore = defineStore(
                     color: item.color.hex,
                     dataLabel: item.dataLabel,
                     tooltip: {
+                        unit: item.tooltip.unit,
                         precision: item.tooltip.precision,
-                        //     //         show: series.tooltip.show,
-                        //     //         formatter: (v) => Math.round(v) + series.unit,
                     },
                 })
             }
-            console.log(opts)
+
             return opts
         })
 
@@ -500,8 +523,10 @@ export const useChartDataStore = defineStore(
             grid,
             tooltip,
             xAxis,
+            detectedXAxisType,
             stacked,
             forecast,
+            markers,
             type,
             seriesList,
 

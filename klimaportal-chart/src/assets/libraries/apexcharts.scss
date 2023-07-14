@@ -45,6 +45,34 @@
         }
     }
 
+    .apexcharts-xaxistooltip,
+    .apexcharts-yaxistooltip {
+        background-color: #000;
+        color: #fff;
+        border-radius: 0;
+        border: 1px solid #fff;
+    }
+
+    .apexcharts-xaxistooltip {
+        &:after {
+            border-bottom-color: #000;
+        }
+
+        &:before {
+            border-bottom-color: #fff;
+        }
+    }
+
+    .apexcharts-yaxistooltip {
+        &:after {
+            border-left-color: #000;
+        }
+
+        &:before {
+            border-left-color: #fff;
+        }
+    }
+
     .vue-apexcharts {
         &.stacked {
 

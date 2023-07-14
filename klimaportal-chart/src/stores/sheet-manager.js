@@ -134,6 +134,29 @@ export const useSheetManagerStore = defineStore(
             })
         }
 
+        function convertCellValue(value) {
+            if (typeof value === 'string') {
+                value = value.trim()
+                const matches =
+                    /^\d+((?<s1>[,.])(\d{3}))*((?<s2>[,.])(\d+))?$/.exec(value)
+
+                if (matches) {
+                    if (matches.groups.s1 === '.') {
+                        // de
+                        value.replace(/\./g, '')
+                    } else if (matches.groups.s1 === ',') {
+                        // en
+                        value.replace(/,/g, '')
+                    }
+
+                    value = value.replace(/[.,]/g, '.')
+                    return parseFloat(value)
+                }
+            }
+
+            return value
+        }
+
         function transformSheetData(data = [], direction = '') {
             if (!data || !data.length) {
                 return []
@@ -141,9 +164,9 @@ export const useSheetManagerStore = defineStore(
 
             let series = []
             if (direction === 'vertical') {
-                series = data.map((row) => row[0])
+                series = data.map((row) => convertCellValue(row[0]))
             } else {
-                series = data[0]
+                series = data[0].map((cell) => convertCellValue(cell))
             }
 
             return series.filter(Boolean)
