@@ -359,7 +359,7 @@ export const useChartDataStore = defineStore(
             }
 
             if (markers.value.show) {
-                opts.markers.size = 6
+                opts.markers.size = opts.markers.hover.size
             }
 
             refSeries.forEach((item, index) => {

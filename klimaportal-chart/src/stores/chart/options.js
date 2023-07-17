@@ -556,7 +556,7 @@ export function createChartDefaultOptions() {
             strokeOpacity: 1,
             // strokeDashArray: 0,
             hover: {
-                size: 6,
+                size: 5,
             },
         },
         forecastDataPoints: {
