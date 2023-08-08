@@ -2,10 +2,12 @@
     <div :class="[model.plugin]">
         <multiselect
             v-if="options.disable_create"
+            ref="multiselect"
             v-model="list"
             :options="selectOptions"
             label="name"
             track-by="value"
+            :customLabel="(item) => item?.nameWithParent || item.name"
             :taggable="true"
             :multiple="true"
             :loading="loading"
@@ -14,19 +16,50 @@
             :clear-on-select="false"
             :preserve-search="true"
             :placeholder="'Select items'"
-            :max-height="200"
+            :option-height="24"
+            @select="onSelectOption"
         >
-            <template slot="option" slot-scope="{ option }">
-                <span class="indent" v-if="option.parent">—</span>
-                {{ option.name }}
+            <template slot="tag" slot-scope="{ option }">
+                <span
+                    class="multiselect__tag"
+                    :title="option.nameWithParent || option.name"
+                >
+                    <span>{{ option.nameWithParent || option.name }}</span>
+                    <i
+                        tabindex="1"
+                        @keypress.enter.prevent="removeElement(option)"
+                        @mousedown.prevent="removeElement(option)"
+                        class="multiselect__tag-icon"
+                    ></i>
+                </span>
+            </template>
+            <template slot="option" slot-scope="{ option, search }">
+                <span
+                    v-if="option.value"
+                    :data-value="option.value"
+                    :class="[
+                        'item',
+                        {
+                            selected: listWithParents.includes(option.value),
+                        },
+                    ]"
+                >
+                    <span class="indent" v-if="option.parent">-</span>
+                    {{ option.name }}
+                    <span class="parent" v-if="option.parent && search"
+                        >({{ option.parentName }})</span
+                    >
+                </span>
             </template>
         </multiselect>
         <multiselect
             v-else
+            ref="multiselect"
             v-model="list"
             :options="selectOptions"
             label="name"
             track-by="value"
+            :customLabel="(item) => item?.nameWithParent || item.name"
             :taggable="true"
             :multiple="true"
             :loading="loading"
@@ -35,12 +68,41 @@
             :clear-on-select="false"
             :preserve-search="true"
             :placeholder="'Select or type to create new'"
+            :option-height="24"
+            @select="onSelectOption"
             @tag="addOption"
-            :max-height="200"
         >
-            <template slot="option" slot-scope="{ option }">
-                <span class="indent" v-if="option.parent">—</span>
-                {{ option.name }}
+            <template slot="tag" slot-scope="{ option }">
+                <span
+                    class="multiselect__tag"
+                    :title="option.nameWithParent || option.name"
+                >
+                    <span>{{ option.nameWithParent || option.name }}</span>
+                    <i
+                        tabindex="1"
+                        @keypress.enter.prevent="removeElement(option)"
+                        @mousedown.prevent="removeElement(option)"
+                        class="multiselect__tag-icon"
+                    ></i>
+                </span>
+            </template>
+            <template slot="option" slot-scope="{ option, search }">
+                <span
+                    v-if="option.value"
+                    :data-value="option.value"
+                    :class="[
+                        'item',
+                        {
+                            selected: listWithParents.includes(option.value),
+                        },
+                    ]"
+                >
+                    <span class="indent" v-if="option.parent">-</span>
+                    {{ option.name }}
+                    <span class="parent" v-if="option.parent && search"
+                        >({{ option.parentName }})</span
+                    >
+                </span>
             </template>
         </multiselect>
     </div>
@@ -81,6 +143,22 @@
             }
         },
 
+        computed: {
+            listWithParents() {
+                const result = {}
+
+                this.list.forEach((item) => {
+                    result[item.value] = true
+
+                    if (item.parent) {
+                        result[item.parent] = true
+                    }
+                })
+
+                return Object.keys(result)
+            },
+        },
+
         methods: {
             initWith() {
                 return {
@@ -114,7 +192,28 @@
                 return false
             },
 
-            pluginCreated() {
+            async pluginCreated() {
+                const community = this.storyItem?.full_slug?.split('/')?.[0]
+                let baseURL = 'https://localhost:3010'
+
+                if (community) {
+                    await this.api
+                        .get(`cdn/stories/${community}/settings`, {
+                            version: 'draft',
+                        })
+                        .then((result) => {
+                            const { story } = result.data
+
+                            console.log(result, story.content)
+                            if (!story?.content?.domain) {
+                                return
+                            }
+
+                            baseURL = 'https://edit.' + story.content.domain
+                            console.log(baseURL)
+                        })
+                }
+
                 // legacy
                 if (!this.model.list) {
                     this.model.list = []
@@ -125,7 +224,11 @@
                         return resolve()
                     }
 
-                    if (/^https?:\/\//.test(this.options.options)) {
+                    if (/^(https?:\/\/|\/\w)/.test(this.options.options)) {
+                        if (this.options.options.startsWith('/')) {
+                            this.options.options =
+                                baseURL + this.options.options
+                        }
                         // is url
                         fetch(this.options.options)
                             .then((response) => {
@@ -154,6 +257,11 @@
                                                     name: subItem.name,
                                                     value: subItem.value,
                                                     parent: item.value,
+                                                    parentName: item.name,
+                                                    nameWithParent:
+                                                        item.name +
+                                                        '/' +
+                                                        subItem.name,
                                                 })
                                             }
                                         }
@@ -385,14 +493,42 @@
                         this.loading = false
                     })
             },
+
+            onSelectOption(item) {
+                this.$nextTick(() => {
+                    // if parent selected and child already in list, remove parent
+                    if (!item?.parent) {
+                        if (this.list.find((o) => o.parent === item.value)) {
+                            const parentIndex = this.list.findIndex(
+                                (o) => o.value === item.value,
+                            )
+
+                            if (parentIndex > -1) {
+                                this.list.splice(parentIndex, 1)
+                            }
+                        }
+                    } else {
+                        // if child selected, remove parent if in list
+                        const parentIndex = this.list.findIndex(
+                            (o) => o.value === item.parent,
+                        )
+
+                        if (parentIndex > -1) {
+                            this.list.splice(parentIndex, 1)
+                        }
+                    }
+                })
+            },
+
+            removeElement(item) {
+                const index = this.list.findIndex((o) => o.value === item.value)
+
+                if (index > -1) {
+                    this.list.splice(index, 1)
+                }
+            },
         },
         watch: {
-            // model: {
-            //     handler: function (value) {
-            //         console.log('model changed!', value)
-            //     },
-            //     deep: true,
-            // },
             list: {
                 handler: function (value) {
                     if (this.isTagsChanged()) {
@@ -412,17 +548,31 @@
 <style lang="scss">
     .lc-shared-tags {
         position: relative;
-        height: 300px;
+        height: 350px;
         overflow: hidden;
     }
 
     .multiselect {
+        &__tags {
+            padding: 6px 28px 0 6px;
+
+            &-wrap {
+                display: flex;
+                flex-flow: row wrap;
+                gap: 0.5rem;
+                margin: 0 0 6px;
+            }
+        }
+
         &__tag {
+            display: block;
+            margin: 0;
             background-color: #dfe3e8;
             color: #1b243f;
             font-size: 14px;
             font-weight: 500;
             border-radius: 5px;
+            max-width: calc(50% - 0.5rem);
 
             &-icon {
                 line-height: 19px;
@@ -442,32 +592,19 @@
         }
 
         &__placeholder {
-            font-size: 16px;
+            font-size: 15px;
             padding: 0;
         }
 
         &__option {
-            display: flex;
-            flex-flow: row nowrap;
-            font-weight: 500;
-            padding: 0 0.75rem;
-            min-height: 2rem;
-            align-items: center;
-            color: #1b243f;
-            background-color: #fff;
+            padding: 0;
+            min-height: 0;
+            color: #1b243f !important;
+            background-color: #fff !important;
             transition: color 0.1s, background-color 0.1s;
 
             &::after {
                 display: none;
-            }
-
-            &::before {
-                content: '✓';
-                display: inline-block;
-                margin-right: 0.75rem;
-                color: #1b243f;
-                opacity: 0;
-                transition: opacity 0.2s, color 0.1s;
             }
 
             &--highlight {
@@ -479,23 +616,61 @@
                 }
             }
 
-            &--selected {
-                color: #1b243f;
-                background-color: #fff;
+            .item {
+                display: flex;
+                flex-flow: row nowrap;
+                font-size: 15px;
                 font-weight: 500;
+                padding: 0 0.75rem;
+                min-height: 1.5rem;
+                align-items: center;
+                white-space: nowrap;
+                background-color: #fff;
+                transition: color 0.1s, background-color 0.1s;
 
-                &::before {
-                    opacity: 1;
-                }
-
-                &.multiselect__option--highlight {
+                &:hover {
                     color: #fff;
                     background-color: #00b3b0;
-                }
-            }
 
-            .indent {
-                margin-right: 0.75rem;
+                    &::before {
+                        color: #fff;
+                    }
+                }
+
+                &::before {
+                    content: '✓';
+                    display: inline-block;
+                    margin-right: 0.75rem;
+                    color: #1b243f;
+                    opacity: 0;
+                    transition: opacity 0.2s, color 0.1s;
+                }
+
+                &.selected {
+                    &::before {
+                        opacity: 1;
+                    }
+
+                    &:not(:hover) {
+                        color: #1b243f;
+                        background-color: #fff;
+
+                        // &:before {
+                        //     color: #fff;
+                        // }
+                    }
+                }
+
+                .indent {
+                    margin-right: 0.75rem;
+                    // padding-left: 1rem;
+                }
+
+                .parent {
+                    margin-left: 0.5rem;
+                    font-weight: 400;
+                    color: #aaa;
+                }
             }
         }
     }
