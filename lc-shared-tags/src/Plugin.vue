@@ -400,6 +400,10 @@
 
                 let starts_with = this.options.starts_with || undefined
                 if (starts_with && this.storyItem?.full_slug) {
+                    if (!starts_with.endsWith('/')) {
+                        starts_with += '/'
+                    }
+
                     let parts = this.storyItem.full_slug.split('/')
                     starts_with = starts_with.replaceAll(
                         /\{(\d)\}/g,
